@@ -3,7 +3,7 @@
  * most up to date changes to the libraries and their usages.
  */
 
-package com.haxtech.haxtracker.presentation
+package com.haxtech.haxtracker.wear.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -27,8 +27,8 @@ import androidx.wear.compose.material3.lazy.rememberTransformationSpec
 import androidx.wear.compose.material3.lazy.transformedHeight
 import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
 import androidx.wear.compose.ui.tooling.preview.WearPreviewFontScales
-import com.haxtech.haxtracker.R
-import com.haxtech.haxtracker.presentation.theme.HaxTrackerTheme
+import com.haxtech.haxtracker.wear.R
+import com.haxtech.haxtracker.wear.presentation.theme.HaxTrackerTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

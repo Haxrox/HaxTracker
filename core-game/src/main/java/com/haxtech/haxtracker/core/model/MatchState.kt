@@ -50,6 +50,41 @@ data class MatchConfig(
                 bestOfGames = 3
             )
         }
+        fun defaultBadmintonSingles(
+            playerAName: String = "Player A",
+            playerBName: String = "Player B"
+        ): MatchConfig {
+            val a1 = Player("a1", playerAName)
+            val b1 = Player("b1", playerBName)
+            return MatchConfig(
+                sport = Sport.BADMINTON,
+                format = MatchFormat.SINGLES,
+                teamA = Team(TeamSide.TEAM_A, playerAName, a1),
+                teamB = Team(TeamSide.TEAM_B, playerBName, b1),
+                winningScore = 21,
+                winByTwo = true,
+                maxScoreCap = 30,
+                bestOfGames = 3
+            )
+        }
+
+        fun defaultPickleballSingles(
+            playerAName: String = "Player A",
+            playerBName: String = "Player B"
+        ): MatchConfig {
+            val a1 = Player("a1", playerAName)
+            val b1 = Player("b1", playerBName)
+            return MatchConfig(
+                sport = Sport.PICKLEBALL,
+                format = MatchFormat.SINGLES,
+                teamA = Team(TeamSide.TEAM_A, playerAName, a1),
+                teamB = Team(TeamSide.TEAM_B, playerBName, b1),
+                winningScore = 11,
+                winByTwo = true,
+                maxScoreCap = null,
+                bestOfGames = 3
+            )
+        }
     }
 }
 

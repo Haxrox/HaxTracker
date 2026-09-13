@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    namespace = "com.haxtech.haxtracker"
+    namespace = "com.haxtech.haxtracker.wear"
     compileSdk = 35
 
     defaultConfig {
         applicationId = "com.haxtech.haxtracker"
         minSdk = 30
-        targetSdk = 35
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
     }
@@ -26,7 +26,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    useLibrary("wear-sdk")
     buildFeatures {
         compose = true
     }

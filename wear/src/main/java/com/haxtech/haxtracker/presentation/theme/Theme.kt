@@ -1,4 +1,4 @@
-package com.haxtech.haxtracker.presentation.theme
+package com.haxtech.haxtracker.wear.presentation.theme
 
 import androidx.compose.runtime.Composable
 import androidx.wear.compose.material3.MaterialTheme

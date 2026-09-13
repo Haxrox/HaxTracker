@@ -1,4 +1,4 @@
-package com.haxtech.haxtracker.tile
+package com.haxtech.haxtracker.wear.tile
 
 import android.content.Context
 import androidx.wear.protolayout.ResourceBuilders.Resources
@@ -16,7 +16,7 @@ import androidx.wear.tiles.RequestBuilders.ResourcesRequest
 import androidx.wear.tiles.tooling.preview.Preview
 import androidx.wear.tiles.tooling.preview.TilePreviewData
 import androidx.wear.tooling.preview.devices.WearDevices
-import com.haxtech.haxtracker.R
+import com.haxtech.haxtracker.wear.R
 import com.google.common.util.concurrent.ListenableFuture
 
 private const val RESOURCES_VERSION = "0"

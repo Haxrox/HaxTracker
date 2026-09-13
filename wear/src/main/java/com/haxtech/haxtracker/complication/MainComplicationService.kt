@@ -1,4 +1,4 @@
-package com.haxtech.haxtracker.complication
+package com.haxtech.haxtracker.wear.complication
 
 import androidx.wear.watchface.complications.data.ComplicationData
 import androidx.wear.watchface.complications.data.ComplicationType
