@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.haxtech.haxtracker.core.GameEngineTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-11T05:29:24.094Z" hostname="HAX-I9" time="0.021">
+  <properties/>
+  <testcase name="testBadmintonWinByTwoAndCapAt30" classname="com.haxtech.haxtracker.core.GameEngineTest" time="0.014"/>
+  <testcase name="testUndoRestoresExactPreviousState" classname="com.haxtech.haxtracker.core.GameEngineTest" time="0.0"/>
+  <testcase name="testBadmintonDoublesScoringAndRotations" classname="com.haxtech.haxtracker.core.GameEngineTest" time="0.0"/>
+  <testcase name="testPickleballDoublesSideOutAndFirstServerException" classname="com.haxtech.haxtracker.core.GameEngineTest" time="0.003"/>
+  <testcase name="testCourtPositionCalculator" classname="com.haxtech.haxtracker.core.GameEngineTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,9 @@
+com.haxtech.haxtracker.core.core-game-pngs-0 D:\bellc\AndroidStudioProjects\HaxTracker\core-game\build\generated\res\pngs\debug
+com.haxtech.haxtracker.core.core-game-updated_navigation_xml-1 D:\bellc\AndroidStudioProjects\HaxTracker\core-game\build\generated\updated_navigation_xml\debug
+com.haxtech.haxtracker.core.core-game-mergeDebugResources-2 D:\bellc\AndroidStudioProjects\HaxTracker\core-game\build\intermediates\incremental\debug\mergeDebugResources\merged.dir
+com.haxtech.haxtracker.core.core-game-mergeDebugResources-3 D:\bellc\AndroidStudioProjects\HaxTracker\core-game\build\intermediates\incremental\debug\mergeDebugResources\stripped.dir
+com.haxtech.haxtracker.core.core-game-debug-4 D:\bellc\AndroidStudioProjects\HaxTracker\core-game\build\intermediates\merged_res\debug\mergeDebugResources
+com.haxtech.haxtracker.core.core-game-debug-5 D:\bellc\AndroidStudioProjects\HaxTracker\core-game\build\intermediates\packaged_res\debug\packageDebugResources
+com.haxtech.haxtracker.core.core-game-debug-6 D:\bellc\AndroidStudioProjects\HaxTracker\core-game\src\debug\res
+com.haxtech.haxtracker.core.core-game-main-7 D:\bellc\AndroidStudioProjects\HaxTracker\core-game\src\main\res
+gradleHome-0 C:\Users\bellc\.gradle
