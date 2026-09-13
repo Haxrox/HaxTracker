@@ -112,13 +112,8 @@ jobs:
             sleep 5
             
             echo "Verifying application process is alive..."
-            PID=$(adb shell pidof com.haxtech.haxtracker)
-            if [ -z "$PID" ]; then
-              echo "ERROR: Process died after launch!"
-              adb logcat -d *:E
-              exit 1
-            fi
-            echo "SUCCESS: HaxTracker is running with PID: $PID on API level ${{ matrix.api-level }}"
+            adb shell pidof com.haxtech.haxtracker >/dev/null || { echo "ERROR: Process died after launch!"; adb logcat -d '*:E'; exit 1; }
+            echo "SUCCESS: HaxTracker is running on API level ${{ matrix.api-level }}"
             
             echo "Taking screenshot..."
             adb shell screencap -p /sdcard/launch_screen_api_${{ matrix.api-level }}.png
