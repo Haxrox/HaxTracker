@@ -119,8 +119,10 @@ fun WearApp() {
                                                 gestureFeedback = "⬅️ Point Undone"
                                             }
                                         } else if (totalDragX > minSwipeDistance) {
-                                            handleAction(GameAction.SwitchSidesManual)
-                                            gestureFeedback = "➡️ Switched Sides"
+                                            if (matchState.canRedo()) {
+                                                handleAction(GameAction.Redo)
+                                                gestureFeedback = "➡️ Point Redone"
+                                            }
                                         }
                                     }
                                 }
@@ -497,7 +499,7 @@ private fun MiniPlayerBadge(
                 .border(width = if (isServer || isReceiver) 1.dp else 0.dp, color = Color.White, shape = CircleShape)
         ) {
             Text(
-                text = if (isServer) "🎾" else player.shortName.take(2),
+                text = if (isServer) "🏸" else player.shortName,
                 fontSize = if (isServer) 8.sp else 7.sp,
                 fontWeight = FontWeight.Bold,
                 color = PitchBlack
@@ -528,7 +530,7 @@ private fun GestureHintFooter(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "⬆️ $teamAName  ⬇️ $teamBName  ⬅️ Undo",
+            text = "⬆️ $teamAName  ⬇️ $teamBName  ⬅️ Undo  ➡️ Redo",
             color = TextSecondary,
             fontSize = 8.sp,
             fontWeight = FontWeight.Medium,
@@ -579,7 +581,7 @@ private fun GestureHelpDialog(
             Text("⬆️ Swipe UP / Tap Left: +1 $teamAName", color = TextPrimary, fontSize = 9.sp)
             Text("⬇️ Swipe DOWN / Tap Right: +1 $teamBName", color = TextPrimary, fontSize = 9.sp)
             Text("⬅️ Swipe LEFT: Undo Point", color = TextPrimary, fontSize = 9.sp)
-            Text("➡️ Swipe RIGHT: Switch Sides", color = TextPrimary, fontSize = 9.sp)
+            Text("➡️ Swipe RIGHT: Redo Point", color = TextPrimary, fontSize = 9.sp)
 
             Spacer(modifier = Modifier.height(2.dp))
             Button(

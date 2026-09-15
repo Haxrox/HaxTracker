@@ -32,16 +32,17 @@ object GameEngine {
             teamAPositions = teamAPos, teamBPositions = teamBPos,
             isGameFinished = false, isMatchFinished = false, isSideSwapped = false,
             gameWinner = null, matchWinner = null, rallyStartTimeMs = nowMs,
-            rallyDurationsSec = emptyList(), pastGameScores = emptyList(), history = emptyList()
+            rallyDurationsSec = emptyList(), pastGameScores = emptyList(), history = emptyList(), redoStack = emptyList()
         )
     }
 
     fun process(state: MatchState, action: GameAction, nowMs: Long = System.currentTimeMillis()): MatchState {
         return when (action) {
             is GameAction.Undo -> handleUndo(state)
+            is GameAction.Redo -> handleRedo(state)
             is GameAction.StartNextGame -> handleStartNextGame(state, nowMs)
             is GameAction.ResetMatch -> newMatch(action.config ?: state.config, nowMs)
-            is GameAction.SwitchSidesManual -> state.copy(isSideSwapped = !state.isSideSwapped, history = state.history + state.copy(history = emptyList()))
+            is GameAction.SwitchSidesManual -> state.copy(isSideSwapped = !state.isSideSwapped, history = state.history + state.copy(history = emptyList(), redoStack = emptyList()), redoStack = emptyList())
             is GameAction.SwitchServerManual -> handleSwitchServerManual(state)
             is GameAction.PointTeamA -> handlePointWon(state, TeamSide.TEAM_A, nowMs)
             is GameAction.PointTeamB -> handlePointWon(state, TeamSide.TEAM_B, nowMs)
@@ -53,7 +54,17 @@ object GameEngine {
     private fun handleUndo(state: MatchState): MatchState {
         val prev = state.history.lastOrNull() ?: return state
         val updatedHistory = state.history.dropLast(1)
-        return prev.copy(history = updatedHistory)
+        val snapshotCurrent = state.copy(history = emptyList(), redoStack = emptyList())
+        val updatedRedoStack = state.redoStack + snapshotCurrent
+        return prev.copy(history = updatedHistory, redoStack = updatedRedoStack)
+    }
+
+    private fun handleRedo(state: MatchState): MatchState {
+        val next = state.redoStack.lastOrNull() ?: return state
+        val updatedRedoStack = state.redoStack.dropLast(1)
+        val snapshotCurrent = state.copy(history = emptyList(), redoStack = emptyList())
+        val updatedHistory = state.history + snapshotCurrent
+        return next.copy(history = updatedHistory, redoStack = updatedRedoStack)
     }
 
     private fun handleStartNextGame(state: MatchState, nowMs: Long): MatchState {
@@ -75,14 +86,14 @@ object GameEngine {
             receivingPlayer = startingReceiver, serverNumber = (if (state.config.sport == Sport.PICKLEBALL && state.config.format == MatchFormat.DOUBLES) 2 else 1),
             servingCourt = CourtHalf.RIGHT, teamAPositions = teamAPos, teamBPositions = teamBPos,
             isGameFinished = false, gameWinner = null, rallyStartTimeMs = nowMs,
-            pastGameScores = updatedPastScores, history = state.history + state.copy(history = emptyList())
+            pastGameScores = updatedPastScores, history = state.history + state.copy(history = emptyList(), redoStack = emptyList()), redoStack = emptyList()
         )
     }
 
     private fun handlePointWon(state: MatchState, rallyWinner: TeamSide, nowMs: Long): MatchState {
         if (state.isGameFinished || state.isMatchFinished) return state
         val rallyDuration = if (state.rallyStartTimeMs > 0) ((nowMs - state.rallyStartTimeMs) / 1000).toInt().coerceAtLeast(1) else 0
-        val snapshot = state.copy(history = emptyList())
+        val snapshot = state.copy(history = emptyList(), redoStack = emptyList())
         val newHistory = state.history + snapshot
 
         return when (state.config.sport) {
@@ -129,7 +140,7 @@ object GameEngine {
             receivingPlayer = newReceivingPlayer, serverNumber = 1,
             servingCourt = newServingCourt, teamAPositions = newTeamAPos,
             teamBPositions = newTeamBPos, rallyStartTimeMs = nowMs,
-            rallyDurationsSec = rallies, history = history
+            rallyDurationsSec = rallies, history = history, redoStack = emptyList()
         ))
     }
 
@@ -180,7 +191,7 @@ object GameEngine {
             receivingPlayer = newReceivingPlayer, serverNumber = newServerNumber,
             servingCourt = newServingCourt, teamAPositions = newTeamAPos,
             teamBPositions = newTeamBPos, rallyStartTimeMs = nowMs,
-            rallyDurationsSec = rallies, history = history
+            rallyDurationsSec = rallies, history = history, redoStack = emptyList()
         ))
     }
 
@@ -206,6 +217,6 @@ object GameEngine {
         val partner = if (servingPos.leftCourtPlayer.id == state.servingPlayer.id) (servingPos.rightCourtPlayer ?: servingPos.leftCourtPlayer) else servingPos.leftCourtPlayer
         val newServingCourt = servingPos.courtOf(partner)
         val newReceivingPlayer = (if (state.servingTeam == TeamSide.TEAM_A) state.teamBPositions else state.teamAPositions).playerAt(newServingCourt)
-        return state.copy(servingPlayer = partner, servingCourt = newServingCourt, receivingPlayer = newReceivingPlayer, serverNumber = (if (state.serverNumber == 1) 2 else 1), history = state.history + state.copy(history = emptyList()))
+        return state.copy(servingPlayer = partner, servingCourt = newServingCourt, receivingPlayer = newReceivingPlayer, serverNumber = (if (state.serverNumber == 1) 2 else 1), history = state.history + state.copy(history = emptyList(), redoStack = emptyList()), redoStack = emptyList())
     }
 }

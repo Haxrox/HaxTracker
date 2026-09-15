@@ -70,6 +70,7 @@ object MatchStateSerializer {
         if (state.matchWinner != null) json.put("matchWinner", state.matchWinner.name)
         json.put("isSideSwapped", state.isSideSwapped)
         json.put("canUndo", state.canUndo())
+        json.put("canRedo", state.canRedo())
 
         val teamAJson = JSONObject()
         teamAJson.put("left", playerToJson(state.teamAPositions.leftCourtPlayer))
@@ -165,7 +166,8 @@ object MatchStateSerializer {
                 isSideSwapped = json.optBoolean("isSideSwapped", false),
                 gameWinner = if (json.has("gameWinner") && !json.isNull("gameWinner")) TeamSide.valueOf(json.getString("gameWinner")) else null,
                 matchWinner = if (json.has("matchWinner") && !json.isNull("matchWinner")) TeamSide.valueOf(json.getString("matchWinner")) else null,
-                history = if (json.optBoolean("canUndo", false)) listOf(MatchState(config = config, servingPlayer = servingPlayer, receivingPlayer = receivingPlayer, teamAPositions = teamAPos, teamBPositions = teamBPos)) else emptyList()
+                history = if (json.optBoolean("canUndo", false)) listOf(MatchState(config = config, servingPlayer = servingPlayer, receivingPlayer = receivingPlayer, teamAPositions = teamAPos, teamBPositions = teamBPos)) else emptyList(),
+                redoStack = if (json.optBoolean("canRedo", false)) listOf(MatchState(config = config, servingPlayer = servingPlayer, receivingPlayer = receivingPlayer, teamAPositions = teamAPos, teamBPositions = teamBPos)) else emptyList()
             )
         } catch (e: Exception) {
             e.printStackTrace()
@@ -181,6 +183,7 @@ object MatchStateSerializer {
             is GameAction.PointServingTeam -> "PointServingTeam"
             is GameAction.PointReceivingTeam -> "PointReceivingTeam"
             is GameAction.Undo -> "Undo"
+            is GameAction.Redo -> "Redo"
             is GameAction.SwitchSidesManual -> "SwitchSidesManual"
             is GameAction.SwitchServerManual -> "SwitchServerManual"
             is GameAction.StartNextGame -> "StartNextGame"
@@ -199,6 +202,7 @@ object MatchStateSerializer {
                 "PointServingTeam" -> GameAction.PointServingTeam
                 "PointReceivingTeam" -> GameAction.PointReceivingTeam
                 "Undo" -> GameAction.Undo
+                "Redo" -> GameAction.Redo
                 "SwitchSidesManual" -> GameAction.SwitchSidesManual
                 "SwitchServerManual" -> GameAction.SwitchServerManual
                 "StartNextGame" -> GameAction.StartNextGame()

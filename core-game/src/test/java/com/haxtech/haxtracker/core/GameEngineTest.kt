@@ -154,6 +154,12 @@ class GameEngineTest {
         assertEquals(initialState.serverNumber, state.serverNumber)
         assertEquals(initialState.servingCourt, state.servingCourt)
         assertFalse(state.canUndo())
+        assertTrue(state.canRedo())
+
+        // Redo action
+        state = GameEngine.process(state, GameAction.Redo)
+        assertTrue(state.canUndo())
+        assertTrue(state.canRedo())
     }
 
     @Test

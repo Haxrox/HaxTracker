@@ -3,10 +3,28 @@ package com.haxtech.haxtracker.core.model
 data class Player(
     val id: String,
     val name: String,
-    val shortName: String = if (name.length <= 3) name.uppercase() else name.take(2).uppercase()
+    val shortName: String = generateShortName(name)
 ) {
     companion object {
         fun default(id: String, name: String) = Player(id = id, name = name)
+
+        private fun generateShortName(name: String): String {
+            val trimmed = name.trim()
+            if (trimmed.length <= 3) return trimmed.uppercase()
+            val parts = trimmed.split("\\s+".toRegex())
+            if (parts.size >= 2) {
+                val lastPart = parts.last().uppercase()
+                if (lastPart.matches(Regex("^[A-Z][0-9]+$")) || lastPart.matches(Regex("^[0-9]+$"))) {
+                    return lastPart
+                }
+                if (parts[0].equals("Player", ignoreCase = true) || parts[0].equals("Team", ignoreCase = true)) {
+                    val candidate = parts.drop(1).joinToString("") { it.take(1) }.uppercase()
+                    if (candidate.isNotEmpty()) return candidate
+                }
+                return "${parts.first().first()}${parts.last().first()}".uppercase()
+            }
+            return trimmed.take(2).uppercase()
+        }
     }
 }
 

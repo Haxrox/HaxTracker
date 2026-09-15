@@ -68,6 +68,10 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
                 triggerHaptic(30)
                 speakAnnouncement("Undo. ${updated.calloutScore}")
             }
+            is GameAction.Redo -> {
+                triggerHaptic(30)
+                speakAnnouncement("Redo. ${updated.calloutScore}")
+            }
             is GameAction.StartNextGame -> {
                 triggerHaptic(100)
                 speakAnnouncement("Starting Game ${updated.currentGameIndex + 1}")

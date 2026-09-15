@@ -15,10 +15,10 @@ data class MatchConfig(
             teamAName: String = "Team A",
             teamBName: String = "Team B"
         ): MatchConfig {
-            val a1 = Player("a1", "Player A1")
-            val a2 = Player("a2", "Player A2")
-            val b1 = Player("b1", "Player B1")
-            val b2 = Player("b2", "Player B2")
+            val a1 = Player("a1", "Player A1", "A1")
+            val a2 = Player("a2", "Player A2", "A2")
+            val b1 = Player("b1", "Player B1", "B1")
+            val b2 = Player("b2", "Player B2", "B2")
             return MatchConfig(
                 sport = Sport.BADMINTON,
                 format = MatchFormat.DOUBLES,
@@ -35,10 +35,10 @@ data class MatchConfig(
             teamAName: String = "Team A",
             teamBName: String = "Team B"
         ): MatchConfig {
-            val a1 = Player("a1", "Player A1")
-            val a2 = Player("a2", "Player A2")
-            val b1 = Player("b1", "Player B1")
-            val b2 = Player("b2", "Player B2")
+            val a1 = Player("a1", "Player A1", "A1")
+            val a2 = Player("a2", "Player A2", "A2")
+            val b1 = Player("b1", "Player B1", "B1")
+            val b2 = Player("b2", "Player B2", "B2")
             return MatchConfig(
                 sport = Sport.PICKLEBALL,
                 format = MatchFormat.DOUBLES,
@@ -54,8 +54,8 @@ data class MatchConfig(
             playerAName: String = "Player A",
             playerBName: String = "Player B"
         ): MatchConfig {
-            val a1 = Player("a1", playerAName)
-            val b1 = Player("b1", playerBName)
+            val a1 = Player("a1", playerAName, "A1")
+            val b1 = Player("b1", playerBName, "B1")
             return MatchConfig(
                 sport = Sport.BADMINTON,
                 format = MatchFormat.SINGLES,
@@ -72,8 +72,8 @@ data class MatchConfig(
             playerAName: String = "Player A",
             playerBName: String = "Player B"
         ): MatchConfig {
-            val a1 = Player("a1", playerAName)
-            val b1 = Player("b1", playerBName)
+            val a1 = Player("a1", playerAName, "A1")
+            val b1 = Player("b1", playerBName, "B1")
             return MatchConfig(
                 sport = Sport.PICKLEBALL,
                 format = MatchFormat.SINGLES,
@@ -110,7 +110,8 @@ data class MatchState(
     val rallyStartTimeMs: Long = 0L,
     val rallyDurationsSec: List<Int> = emptyList(),
     val pastGameScores: List<Pair<Int, Int>> = emptyList(),
-    val history: List<MatchState> = emptyList()
+    val history: List<MatchState> = emptyList(),
+    val redoStack: List<MatchState> = emptyList()
 ) {
     val serverTeamScore: Int
         get() = if (servingTeam == TeamSide.TEAM_A) scoreTeamA else scoreTeamB
@@ -170,4 +171,5 @@ data class MatchState(
         }
 
     fun canUndo(): Boolean = history.isNotEmpty()
+    fun canRedo(): Boolean = redoStack.isNotEmpty()
 }

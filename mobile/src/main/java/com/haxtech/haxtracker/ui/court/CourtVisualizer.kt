@@ -27,7 +27,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.haxtech.haxtracker.core.engine.CourtPositionCalculator
-import com.haxtech.haxtracker.core.engine.CourtRenderModel
 import com.haxtech.haxtracker.core.engine.CourtSlot
 import com.haxtech.haxtracker.core.model.MatchState
 import com.haxtech.haxtracker.core.model.Player
@@ -150,10 +149,27 @@ fun CourtVisualizer(
 @Composable
 private fun PlayerBadge(player: Player?, isServer: Boolean, isReceiver: Boolean, teamColor: Color, pulseScale: Float, sport: Sport) {
     if (player == null) return
-    val sportIcon = if (sport == Sport.BADMINTON) "🏸" else "🏓"
+    val sportIcon = if (sport == Sport.BADMINTON) "🏸" else "🎾"
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(2.dp)) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(38.dp).scale(if (isServer) pulseScale else 1f).clip(CircleShape).background(if (isServer) VoltGold else if (isReceiver) Color(0xFF38BDF8) else teamColor.copy(alpha = 0.85f)).border(width = if (isServer || isReceiver) 2.dp else 1.dp, color = if (isServer || isReceiver) Color.White else Color.Black.copy(alpha = 0.5f), shape = CircleShape)) {
-            Text(text = if (isServer) sportIcon else player.shortName, fontSize = if (isServer) 16.sp else 12.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(38.dp)
+                .scale(if (isServer) pulseScale else 1f)
+                .clip(CircleShape)
+                .background(if (isServer) VoltGold else if (isReceiver) Color(0xFF38BDF8) else teamColor.copy(alpha = 0.85f))
+                .border(
+                    width = if (isServer || isReceiver) 2.dp else 1.dp,
+                    color = if (isServer || isReceiver) Color.White else Color.Black.copy(alpha = 0.5f),
+                    shape = CircleShape
+                )
+        ) {
+            Text(
+                text = if (isServer) sportIcon else player.shortName,
+                fontSize = if (isServer) 16.sp else 12.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = Color.Black
+            )
         }
         Spacer(modifier = Modifier.height(3.dp))
         Box(modifier = Modifier.clip(RoundedCornerShape(4.dp)).background(Color.Black.copy(alpha = 0.65f)).padding(horizontal = 4.dp, vertical = 1.dp)) {

@@ -6,6 +6,7 @@ sealed interface GameAction {
     data object PointServingTeam : GameAction
     data object PointReceivingTeam : GameAction
     data object Undo : GameAction
+    data object Redo : GameAction
     data object SwitchSidesManual : GameAction
     data object SwitchServerManual : GameAction
     data class StartNextGame(val timestampMs: Long = System.currentTimeMillis()) : GameAction

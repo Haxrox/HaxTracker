@@ -1,14 +1,13 @@
 package com.haxtech.haxtracker.ui.match
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -21,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -30,6 +30,8 @@ import androidx.compose.ui.window.Dialog
 import com.haxtech.haxtracker.core.model.*
 import com.haxtech.haxtracker.ui.court.CourtVisualizer
 import com.haxtech.haxtracker.ui.theme.*
+import kotlinx.coroutines.delay
+import kotlin.math.abs
 
 @Composable
 fun MatchScreen(
@@ -39,11 +41,62 @@ fun MatchScreen(
 ) {
     val state by viewModel.matchState.collectAsState()
     val showSpectatorDialog = remember { mutableStateOf(false) }
+    val showGestureHelp = remember { mutableStateOf(false) }
+
+    var gestureFeedback by remember { mutableStateOf<String?>(null) }
+    var totalDragX by remember { mutableFloatStateOf(0f) }
+    var totalDragY by remember { mutableFloatStateOf(0f) }
+
+    val isFinished = state.isGameFinished || state.isMatchFinished
+
+    LaunchedEffect(gestureFeedback) {
+        if (gestureFeedback != null) {
+            delay(1200)
+            gestureFeedback = null
+        }
+    }
 
     Box(
         modifier = modifier
             .fillMaxSize()
             .background(PitchBlack)
+            .pointerInput(isFinished) {
+                if (isFinished) return@pointerInput
+                detectDragGestures(
+                    onDragStart = {
+                        totalDragX = 0f
+                        totalDragY = 0f
+                    },
+                    onDragEnd = {
+                        val minSwipeDistance = 30f
+                        if (abs(totalDragY) > abs(totalDragX)) {
+                            if (totalDragY < -minSwipeDistance) {
+                                viewModel.onAction(GameAction.PointTeamA)
+                                gestureFeedback = "+1 ${state.config.teamA.name}"
+                            } else if (totalDragY > minSwipeDistance) {
+                                viewModel.onAction(GameAction.PointTeamB)
+                                gestureFeedback = "+1 ${state.config.teamB.name}"
+                            }
+                        } else {
+                            if (totalDragX < -minSwipeDistance) {
+                                if (state.canUndo()) {
+                                    viewModel.onAction(GameAction.Undo)
+                                    gestureFeedback = "⬅️ Point Undone"
+                                }
+                            } else if (totalDragX > minSwipeDistance) {
+                                if (state.canRedo()) {
+                                    viewModel.onAction(GameAction.Redo)
+                                    gestureFeedback = "➡️ Point Redone"
+                                }
+                            }
+                        }
+                    }
+                ) { change, dragAmount ->
+                    change.consume()
+                    totalDragX += dragAmount.x
+                    totalDragY += dragAmount.y
+                }
+            }
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
@@ -73,8 +126,31 @@ fun MatchScreen(
                     )
                 }
 
-                IconButton(onClick = { showSpectatorDialog.value = true }) {
-                    Text("📡", fontSize = 20.sp)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = {
+                            viewModel.onAction(GameAction.Undo)
+                            gestureFeedback = "⬅️ Point Undone"
+                        },
+                        enabled = state.canUndo()
+                    ) {
+                        Text("⟲", color = if (state.canUndo()) VoltCoral else TextDisabled, fontSize = 22.sp)
+                    }
+                    IconButton(
+                        onClick = {
+                            viewModel.onAction(GameAction.Redo)
+                            gestureFeedback = "➡️ Point Redone"
+                        },
+                        enabled = state.canRedo()
+                    ) {
+                        Text("⟳", color = if (state.canRedo()) VoltCyan else TextDisabled, fontSize = 22.sp)
+                    }
+                    IconButton(onClick = { showGestureHelp.value = true }) {
+                        Text("🖐", fontSize = 20.sp)
+                    }
+                    IconButton(onClick = { showSpectatorDialog.value = true }) {
+                        Text("📡", fontSize = 20.sp)
+                    }
                 }
             }
 
@@ -92,7 +168,12 @@ fun MatchScreen(
                     isWinner = state.gameWinner == TeamSide.TEAM_A,
                     serverNum = if (state.servingTeam == TeamSide.TEAM_A) state.serverNumber.toString() else "",
                     color = VoltGreen,
-                    onTap = { viewModel.onAction(GameAction.PointTeamA) },
+                    onTap = {
+                        if (!isFinished) {
+                            viewModel.onAction(GameAction.PointTeamA)
+                            gestureFeedback = "+1 ${state.config.teamA.name}"
+                        }
+                    },
                     modifier = Modifier.weight(1f)
                 )
 
@@ -112,10 +193,28 @@ fun MatchScreen(
                     isWinner = state.gameWinner == TeamSide.TEAM_B,
                     serverNum = if (state.servingTeam == TeamSide.TEAM_B) state.serverNumber.toString() else "",
                     color = VoltCyan,
-                    onTap = { viewModel.onAction(GameAction.PointTeamB) },
+                    onTap = {
+                        if (!isFinished) {
+                            viewModel.onAction(GameAction.PointTeamB)
+                            gestureFeedback = "+1 ${state.config.teamB.name}"
+                        }
+                    },
                     modifier = Modifier.weight(1f)
                 )
             }
+
+            // Gesture hint bar above court
+            Text(
+                text = "⬆️ ${state.config.teamA.name}   ⬇️ ${state.config.teamB.name}   ⬅️ Undo   ➡️ Redo",
+                color = TextSecondary,
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showGestureHelp.value = true }
+                    .padding(vertical = 4.dp)
+            )
 
             // Court Visualizer
             Box(
@@ -127,66 +226,29 @@ fun MatchScreen(
             ) {
                 CourtVisualizer(matchState = state)
             }
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Bottom Controls
-            Row(
+        // Gesture Feedback Toast Overlay
+        AnimatedVisibility(
+            visible = gestureFeedback != null,
+            enter = fadeIn() + scaleIn(),
+            exit = fadeOut() + scaleOut(),
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 70.dp)
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(VoltGreen.copy(alpha = 0.95f))
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
-                // Undo Button
-                IconButton(
-                    onClick = { viewModel.onAction(GameAction.Undo) },
-                    enabled = state.canUndo(),
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(
-                            if (state.canUndo()) DarkSurfaceElevated else DarkSurface,
-                            CircleShape
-                        )
-                ) {
-                    Text("⟲", color = if (state.canUndo()) VoltCoral else TextDisabled, fontSize = 24.sp)
-                }
-
-                // Win Point Button (Points for the serving team)
-                Button(
-                    onClick = { viewModel.onAction(GameAction.PointServingTeam) },
-                    colors = ButtonDefaults.buttonColors(containerColor = VoltGreen, contentColor = PitchBlack),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .height(56.dp)
-                        .weight(1f),
-                    enabled = !state.isGameFinished
-                ) {
-                    Text("WIN POINT", fontWeight = FontWeight.Black)
-                }
-
-                // Fault / Side-Out Button (Points for the receiving team)
-                Button(
-                    onClick = { viewModel.onAction(GameAction.PointReceivingTeam) },
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceElevated, contentColor = VoltCoral),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .height(56.dp)
-                        .weight(1f),
-                    enabled = !state.isGameFinished
-                ) {
-                    Text("FAULT", fontWeight = FontWeight.Bold)
-                }
-
-                // Settings / More Button
-                IconButton(
-                    onClick = { viewModel.onAction(GameAction.SwitchSidesManual) },
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(DarkSurfaceElevated, CircleShape)
-                ) {
-                    Text("⇄", color = TextSecondary, fontSize = 24.sp) // Switch sides icon
-                }
+                Text(
+                    text = gestureFeedback ?: "",
+                    color = PitchBlack,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
             }
         }
 
@@ -210,6 +272,14 @@ fun MatchScreen(
             SpectatorDialog(
                 matchState = state,
                 onDismiss = { showSpectatorDialog.value = false }
+            )
+        }
+
+        if (showGestureHelp.value) {
+            GestureHelpDialog(
+                teamAName = state.config.teamA.name,
+                teamBName = state.config.teamB.name,
+                onDismiss = { showGestureHelp.value = false }
             )
         }
     }
@@ -480,6 +550,67 @@ private fun SpectatorDialog(
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     Text("Close")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GestureHelpDialog(
+    teamAName: String,
+    teamBName: String,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(20.dp),
+            color = DarkSurface,
+            border = androidx.compose.foundation.BorderStroke(1.dp, VoltCyan),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Text(
+                    text = "🖐 GESTURE CONTROLS",
+                    color = VoltCyan,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Black
+                )
+
+                Text(
+                    text = "Swipe anywhere on the screen to control the match:",
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center
+                )
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(DarkSurfaceElevated)
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("⬆️ Swipe UP: +1 $teamAName", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("⬇️ Swipe DOWN: +1 $teamBName", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("⬅️ Swipe LEFT: Undo Point", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("➡️ Swipe RIGHT: Redo Point", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(containerColor = VoltCyan, contentColor = PitchBlack),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("GOT IT", fontWeight = FontWeight.Bold)
                 }
             }
         }
