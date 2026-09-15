@@ -8,12 +8,9 @@ import com.haxtech.haxtracker.core.model.GameAction
 import com.haxtech.haxtracker.core.model.MatchConfig
 import com.haxtech.haxtracker.core.model.MatchState
 import com.haxtech.haxtracker.core.sync.MatchStateSerializer
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 object PhoneSyncRepository {
 
@@ -42,14 +39,12 @@ object PhoneSyncRepository {
     }
 
     fun dispatchActionFromWatch(action: GameAction) {
-        CoroutineScope(Dispatchers.Main).launch {
-            val prev = _matchState.value
-            val updated = GameEngine.process(prev, action)
-            _matchState.value = updated
-            _isMatchActive.value = true
-            syncStateToWatch(updated)
-            onActionExecutedListener?.invoke(action, updated)
-        }
+        val prev = _matchState.value
+        val updated = GameEngine.process(prev, action)
+        _matchState.value = updated
+        _isMatchActive.value = true
+        onActionExecutedListener?.invoke(action, updated)
+        syncStateToWatch(updated)
     }
 
     fun syncStateToWatch(state: MatchState) {

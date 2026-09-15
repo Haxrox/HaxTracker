@@ -14,11 +14,22 @@ data class Player(
             val parts = trimmed.split("\\s+".toRegex())
             if (parts.size >= 2) {
                 val lastPart = parts.last().uppercase()
-                if (lastPart.matches(Regex("^[A-Z][0-9]+$")) || lastPart.matches(Regex("^[0-9]+$"))) {
+                if (lastPart.matches(Regex("^[A-Z][0-9]+$"))) {
                     return lastPart
                 }
+                if (lastPart.matches(Regex("^[0-9]+$"))) {
+                    val prevPart = parts[parts.size - 2].uppercase()
+                    if (prevPart.length == 1) {
+                        return "$prevPart$lastPart"
+                    }
+                }
+                val teamMatch = Regex("(?i)\\b([A-Z])\\s*([0-9])\\b").find(trimmed)
+                if (teamMatch != null) {
+                    return "${teamMatch.groupValues[1].uppercase()}${teamMatch.groupValues[2]}"
+                }
                 if (parts[0].equals("Player", ignoreCase = true) || parts[0].equals("Team", ignoreCase = true)) {
-                    val candidate = parts.drop(1).joinToString("") { it.take(1) }.uppercase()
+                    val candidate = parts.drop(1).filter { !it.equals("Player", ignoreCase = true) && !it.equals("Team", ignoreCase = true) }
+                        .joinToString("") { it.take(1) }.uppercase()
                     if (candidate.isNotEmpty()) return candidate
                 }
                 return "${parts.first().first()}${parts.last().first()}".uppercase()

@@ -12,7 +12,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -79,14 +78,14 @@ fun MatchScreen(
                             }
                         } else {
                             if (totalDragX < -minSwipeDistance) {
-                                if (state.canUndo()) {
-                                    viewModel.onAction(GameAction.Undo)
-                                    gestureFeedback = "⬅️ Point Undone"
-                                }
-                            } else if (totalDragX > minSwipeDistance) {
                                 if (state.canRedo()) {
                                     viewModel.onAction(GameAction.Redo)
-                                    gestureFeedback = "➡️ Point Redone"
+                                    gestureFeedback = "⬅️ Point Redone"
+                                }
+                            } else if (totalDragX > minSwipeDistance) {
+                                if (state.canUndo()) {
+                                    viewModel.onAction(GameAction.Undo)
+                                    gestureFeedback = "➡️ Point Undone"
                                 }
                             }
                         }
@@ -205,7 +204,7 @@ fun MatchScreen(
 
             // Gesture hint bar above court
             Text(
-                text = "⬆️ ${state.config.teamA.name}   ⬇️ ${state.config.teamB.name}   ⬅️ Undo   ➡️ Redo",
+                text = "⬆️ ${state.config.teamA.name}   ⬇️ ${state.config.teamB.name}   ➡️ Undo   ⬅️ Redo",
                 color = TextSecondary,
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
@@ -598,8 +597,8 @@ private fun GestureHelpDialog(
                 ) {
                     Text("⬆️ Swipe UP: +1 $teamAName", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                     Text("⬇️ Swipe DOWN: +1 $teamBName", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                    Text("⬅️ Swipe LEFT: Undo Point", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                    Text("➡️ Swipe RIGHT: Redo Point", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("➡️ Swipe RIGHT: Undo Point", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                    Text("⬅️ Swipe LEFT: Redo Point", color = TextPrimary, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))

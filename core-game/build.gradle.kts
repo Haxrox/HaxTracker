@@ -25,4 +25,5 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     testImplementation(libs.junit)
+    testImplementation("org.json:json:20240303")
 }

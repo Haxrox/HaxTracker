@@ -114,14 +114,14 @@ fun WearApp() {
                                         }
                                     } else {
                                         if (totalDragX < -minSwipeDistance) {
-                                            if (matchState.canUndo()) {
-                                                handleAction(GameAction.Undo)
-                                                gestureFeedback = "⬅️ Point Undone"
-                                            }
-                                        } else if (totalDragX > minSwipeDistance) {
                                             if (matchState.canRedo()) {
                                                 handleAction(GameAction.Redo)
-                                                gestureFeedback = "➡️ Point Redone"
+                                                gestureFeedback = "⬅️ Point Redone"
+                                            }
+                                        } else if (totalDragX > minSwipeDistance) {
+                                            if (matchState.canUndo()) {
+                                                handleAction(GameAction.Undo)
+                                                gestureFeedback = "➡️ Point Undone"
                                             }
                                         }
                                     }
@@ -530,7 +530,7 @@ private fun GestureHintFooter(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            text = "⬆️ $teamAName  ⬇️ $teamBName  ⬅️ Undo  ➡️ Redo",
+            text = "⬆️ $teamAName  ⬇️ $teamBName  ➡️ Undo  ⬅️ Redo",
             color = TextSecondary,
             fontSize = 8.sp,
             fontWeight = FontWeight.Medium,
@@ -580,8 +580,8 @@ private fun GestureHelpDialog(
 
             Text("⬆️ Swipe UP / Tap Left: +1 $teamAName", color = TextPrimary, fontSize = 9.sp)
             Text("⬇️ Swipe DOWN / Tap Right: +1 $teamBName", color = TextPrimary, fontSize = 9.sp)
-            Text("⬅️ Swipe LEFT: Undo Point", color = TextPrimary, fontSize = 9.sp)
-            Text("➡️ Swipe RIGHT: Redo Point", color = TextPrimary, fontSize = 9.sp)
+            Text("➡️ Swipe RIGHT: Undo Point", color = TextPrimary, fontSize = 9.sp)
+            Text("⬅️ Swipe LEFT: Redo Point", color = TextPrimary, fontSize = 9.sp)
 
             Spacer(modifier = Modifier.height(2.dp))
             Button(
