@@ -126,7 +126,7 @@ data class MatchState(
             return if (config.sport == Sport.PICKLEBALL && config.format == MatchFormat.DOUBLES) {
                 "$serverTeamScore - $receiverTeamScore - $serverNumber"
             } else {
-                "$scoreTeamA - $scoreTeamB"
+                "$serverTeamScore - $receiverTeamScore"
             }
         }
 
@@ -144,7 +144,7 @@ data class MatchState(
             val base = if (config.sport == Sport.PICKLEBALL && config.format == MatchFormat.DOUBLES) {
                 "$serverTeamScore, $receiverTeamScore, server $serverNumber"
             } else {
-                "$scoreTeamA, $scoreTeamB"
+                "$serverTeamScore, $receiverTeamScore"
             }
 
             val prefix = if (isMatchPoint) "Match point! " else if (isGamePoint) "Game point! " else ""

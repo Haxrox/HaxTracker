@@ -9,10 +9,10 @@ import android.os.VibratorManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.haxtech.haxtracker.audio.ScoreTtsAnnouncer
-import com.haxtech.haxtracker.core.engine.GameEngine
 import com.haxtech.haxtracker.core.model.GameAction
 import com.haxtech.haxtracker.core.model.MatchConfig
 import com.haxtech.haxtracker.core.model.MatchState
+import com.haxtech.haxtracker.sync.PhoneSyncRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,8 +30,8 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         application.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
     }
 
-    private val _matchState = MutableStateFlow(GameEngine.newMatch(MatchConfig.defaultPickleballDoubles()))
-    val matchState: StateFlow<MatchState> = _matchState.asStateFlow()
+    val matchState: StateFlow<MatchState> = PhoneSyncRepository.matchState
+    val isMatchActive: StateFlow<Boolean> = PhoneSyncRepository.isMatchActive
 
     private val _isVolumeControlEnabled = MutableStateFlow(true)
     val isVolumeControlEnabled: StateFlow<Boolean> = _isVolumeControlEnabled.asStateFlow()
@@ -41,20 +41,28 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         announcer.isEnabled = _isTtsEnabled.value
+        PhoneSyncRepository.init(application)
+        PhoneSyncRepository.onActionExecutedListener = { action, updatedState ->
+            handleFeedbackForAction(action, updatedState)
+        }
     }
 
     fun startMatch(config: MatchConfig) {
-        val fresh = GameEngine.newMatch(config)
-        _matchState.value = fresh
+        PhoneSyncRepository.startMatch(config)
+        val fresh = PhoneSyncRepository.matchState.value
         triggerHaptic(50)
         speakAnnouncement(fresh.spokenAnnouncement)
     }
 
-    fun onAction(action: GameAction) {
-        val prev = _matchState.value
-        val updated = GameEngine.process(prev, action)
-        _matchState.value = updated
+    fun closeMatch() {
+        PhoneSyncRepository.closeMatch()
+    }
 
+    fun onAction(action: GameAction) {
+        PhoneSyncRepository.dispatchActionFromWatch(action)
+    }
+
+    private fun handleFeedbackForAction(action: GameAction, updated: MatchState) {
         when (action) {
             is GameAction.Undo -> {
                 triggerHaptic(30)
@@ -85,7 +93,7 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
 
     fun handleVolumeKey(isVolumeUp: Boolean): Boolean {
         if (!_isVolumeControlEnabled.value) return false
-        val state = _matchState.value
+        val state = matchState.value
         if (state.isGameFinished || state.isMatchFinished) return false
 
         if (isVolumeUp) {

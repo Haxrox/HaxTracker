@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -78,16 +79,15 @@ fun HaxTrackerApp(
     onScreenChanged: (Boolean) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var activeMatchConfig by remember { mutableStateOf<MatchConfig?>(null) }
+    val isMatchActive by viewModel.isMatchActive.collectAsState()
 
-    val isMatchActive = activeMatchConfig != null
     onScreenChanged(isMatchActive)
 
-    if (activeMatchConfig != null) {
+    if (isMatchActive) {
         MatchScreen(
             viewModel = viewModel,
             onNavigateBack = {
-                activeMatchConfig = null
+                viewModel.closeMatch()
             },
             modifier = modifier
         )
@@ -95,7 +95,6 @@ fun HaxTrackerApp(
         HomeScreen(
             onStartMatch = { config ->
                 viewModel.startMatch(config)
-                activeMatchConfig = config
             },
             modifier = modifier
         )
