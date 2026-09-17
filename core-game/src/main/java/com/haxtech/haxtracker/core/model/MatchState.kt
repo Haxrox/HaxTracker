@@ -142,10 +142,21 @@ data class MatchState(
                 return "Game over. $winnerName wins game ${currentGameIndex + 1}."
             }
 
-            val base = if (config.sport == Sport.PICKLEBALL && config.format == MatchFormat.DOUBLES) {
-                "$serverTeamScore, $receiverTeamScore, server $serverNumber"
+            val serverId = if (servingTeam == TeamSide.TEAM_A) {
+                if (servingPlayer.id == config.teamA.player1.id) "A1" else "A2"
             } else {
-                "$serverTeamScore, $receiverTeamScore"
+                if (servingPlayer.id == config.teamB.player1.id) "B1" else "B2"
+            }
+            val receiverId = if (servingTeam == TeamSide.TEAM_A) {
+                if (receivingPlayer.id == config.teamB.player1.id) "B1" else "B2"
+            } else {
+                if (receivingPlayer.id == config.teamA.player1.id) "A1" else "A2"
+            }
+
+            val base = if (config.sport == Sport.PICKLEBALL && config.format == MatchFormat.DOUBLES) {
+                "$serverTeamScore-$receiverTeamScore, server $serverNumber. $serverId serving $receiverId"
+            } else {
+                "$serverTeamScore-$receiverTeamScore. $serverId serving $receiverId"
             }
 
             val prefix = if (isMatchPoint) "Match point! " else if (isGamePoint) "Game point! " else ""

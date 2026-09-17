@@ -39,6 +39,7 @@ fun MatchScreen(
     modifier: Modifier = Modifier
 ) {
     val state by viewModel.matchState.collectAsState()
+    val isTtsEnabled by viewModel.isTtsEnabled.collectAsState()
     val showSpectatorDialog = remember { mutableStateOf(false) }
     val showGestureHelp = remember { mutableStateOf(false) }
 
@@ -144,8 +145,18 @@ fun MatchScreen(
                     ) {
                         Text("⟳", color = if (state.canRedo()) VoltCyan else TextDisabled, fontSize = 22.sp)
                     }
+                    IconButton(onClick = { viewModel.onAction(GameAction.SwitchSidesManual) }) {
+                        Text("⇄", color = VoltCyan, fontSize = 22.sp)
+                    }
                     IconButton(onClick = { showGestureHelp.value = true }) {
                         Text("🖐", fontSize = 20.sp)
+                    }
+                    IconButton(onClick = { viewModel.toggleTts() }) {
+                        Text(
+                            text = if (isTtsEnabled) "🔊" else "🔇",
+                            color = if (isTtsEnabled) VoltGreen else TextDisabled,
+                            fontSize = 20.sp
+                        )
                     }
                     IconButton(onClick = { showSpectatorDialog.value = true }) {
                         Text("📡", fontSize = 20.sp)

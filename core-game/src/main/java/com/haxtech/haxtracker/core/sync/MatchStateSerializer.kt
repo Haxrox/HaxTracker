@@ -42,6 +42,20 @@ object MatchStateSerializer {
     }
 
     fun toJson(state: MatchState): String {
+        val json = stateToJsonObject(state)
+
+        val historyArray = org.json.JSONArray()
+        state.history.forEach { historyArray.put(stateToJsonObject(it)) }
+        json.put("historyList", historyArray)
+
+        val redoArray = org.json.JSONArray()
+        state.redoStack.forEach { redoArray.put(stateToJsonObject(it)) }
+        json.put("redoList", redoArray)
+
+        return json.toString()
+    }
+
+    private fun stateToJsonObject(state: MatchState): JSONObject {
         val json = JSONObject()
 
         val configJson = JSONObject()
@@ -69,8 +83,6 @@ object MatchStateSerializer {
         if (state.gameWinner != null) json.put("gameWinner", state.gameWinner.name)
         if (state.matchWinner != null) json.put("matchWinner", state.matchWinner.name)
         json.put("isSideSwapped", state.isSideSwapped)
-        json.put("canUndo", state.canUndo())
-        json.put("canRedo", state.canRedo())
 
         val teamAJson = JSONObject()
         teamAJson.put("left", playerToJson(state.teamAPositions.leftCourtPlayer))
@@ -86,14 +98,40 @@ object MatchStateSerializer {
         }
         json.put("teamBPositions", teamBJson)
 
-        return json.toString()
+        return json
     }
 
     fun fromJson(jsonStr: String): MatchState? {
         return try {
             val json = JSONObject(jsonStr)
-            val configJson = json.getJSONObject("config")
+            val state = stateFromJsonObject(json) ?: return null
 
+            val historyList = mutableListOf<MatchState>()
+            val historyArray = json.optJSONArray("historyList")
+            if (historyArray != null) {
+                for (i in 0 until historyArray.length()) {
+                    stateFromJsonObject(historyArray.getJSONObject(i))?.let { historyList.add(it) }
+                }
+            }
+
+            val redoList = mutableListOf<MatchState>()
+            val redoArray = json.optJSONArray("redoList")
+            if (redoArray != null) {
+                for (i in 0 until redoArray.length()) {
+                    stateFromJsonObject(redoArray.getJSONObject(i))?.let { redoList.add(it) }
+                }
+            }
+
+            state.copy(history = historyList, redoStack = redoList)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun stateFromJsonObject(json: JSONObject): MatchState? {
+        return try {
+            val configJson = json.getJSONObject("config")
             val sport = Sport.valueOf(configJson.getString("sport"))
             val format = MatchFormat.valueOf(configJson.getString("format"))
             val winningScore = configJson.optInt("winningScore", sport.defaultWinningScore)
@@ -104,14 +142,9 @@ object MatchStateSerializer {
             val teamB = teamFromJson(configJson.getJSONObject("teamB"))
 
             val config = MatchConfig(
-                sport = sport,
-                format = format,
-                teamA = teamA,
-                teamB = teamB,
-                winningScore = winningScore,
-                winByTwo = winByTwo,
-                maxScoreCap = sport.maxScoreCap,
-                bestOfGames = bestOfGames
+                sport = sport, format = format, teamA = teamA, teamB = teamB,
+                winningScore = winningScore, winByTwo = winByTwo,
+                maxScoreCap = sport.maxScoreCap, bestOfGames = bestOfGames
             )
 
             val servingTeam = TeamSide.valueOf(json.optString("servingTeam", "TEAM_A"))
@@ -166,11 +199,10 @@ object MatchStateSerializer {
                 isSideSwapped = json.optBoolean("isSideSwapped", false),
                 gameWinner = if (json.has("gameWinner") && !json.isNull("gameWinner")) TeamSide.valueOf(json.getString("gameWinner")) else null,
                 matchWinner = if (json.has("matchWinner") && !json.isNull("matchWinner")) TeamSide.valueOf(json.getString("matchWinner")) else null,
-                history = if (json.optBoolean("canUndo", false)) listOf(MatchState(config = config, servingPlayer = servingPlayer, receivingPlayer = receivingPlayer, teamAPositions = teamAPos, teamBPositions = teamBPos)) else emptyList(),
-                redoStack = if (json.optBoolean("canRedo", false)) listOf(MatchState(config = config, servingPlayer = servingPlayer, receivingPlayer = receivingPlayer, teamAPositions = teamAPos, teamBPositions = teamBPos)) else emptyList()
+                history = emptyList(),
+                redoStack = emptyList()
             )
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }

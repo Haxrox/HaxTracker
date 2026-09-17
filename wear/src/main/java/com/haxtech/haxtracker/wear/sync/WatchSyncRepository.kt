@@ -56,7 +56,7 @@ object WatchSyncRepository {
         _isConnectedToPhone.value = true
     }
 
-    fun sendActionToPhone(context: Context, action: GameAction, fallbackLocalProcess: (GameAction) -> Unit) {
+    fun sendActionToPhone(context: Context, action: GameAction) {
         val jsonStr = MatchStateSerializer.actionToJson(action)
         val bytes = jsonStr.toByteArray(Charsets.UTF_8)
 
@@ -82,18 +82,45 @@ object WatchSyncRepository {
                     for (node in nodes) {
                         messageClient.sendMessage(node.id, "/action", bytes)
                     }
-                } else {
-                    fallbackLocalProcess(action)
                 }
-            }.addOnFailureListener {
-                fallbackLocalProcess(action)
             }
         } catch (e: Exception) {
-            fallbackLocalProcess(action)
+            e.printStackTrace()
         }
     }
 
-    fun updateLocalState(newState: MatchState) {
+    fun updateLocalState(context: Context, newState: MatchState) {
         _matchState.value = newState
+        syncStateToPhone(context, newState)
+    }
+
+    private fun syncStateToPhone(context: Context, state: MatchState) {
+        val jsonStr = MatchStateSerializer.toJson(state)
+        val bytes = jsonStr.toByteArray(Charsets.UTF_8)
+
+        // 1. DataClient
+        try {
+            val putDataMapReq = PutDataMapRequest.create("/match_state_watch")
+            putDataMapReq.dataMap.putString("match_state_json", jsonStr)
+            putDataMapReq.dataMap.putLong("timestamp", System.currentTimeMillis())
+            val req = putDataMapReq.asPutDataRequest().setUrgent()
+            Wearable.getDataClient(context).putDataItem(req)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        // 2. MessageClient
+        try {
+            val nodeClient = Wearable.getNodeClient(context)
+            val messageClient = Wearable.getMessageClient(context)
+
+            nodeClient.connectedNodes.addOnSuccessListener { nodes ->
+                for (node in nodes) {
+                    messageClient.sendMessage(node.id, "/match_state_watch", bytes)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

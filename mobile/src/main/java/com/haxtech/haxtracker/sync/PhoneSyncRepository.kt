@@ -21,7 +21,6 @@ object PhoneSyncRepository {
     val isMatchActive: StateFlow<Boolean> = _isMatchActive.asStateFlow()
 
     private var appContext: Context? = null
-    var onActionExecutedListener: ((GameAction, MatchState) -> Unit)? = null
 
     fun init(context: Context) {
         appContext = context.applicationContext
@@ -38,13 +37,26 @@ object PhoneSyncRepository {
         _isMatchActive.value = false
     }
 
-    fun dispatchActionFromWatch(action: GameAction) {
+    fun dispatchAction(action: GameAction) {
         val prev = _matchState.value
         val updated = GameEngine.process(prev, action)
         _matchState.value = updated
         _isMatchActive.value = true
-        onActionExecutedListener?.invoke(action, updated)
         syncStateToWatch(updated)
+    }
+
+    fun dispatchActionFromWatch(action: GameAction) {
+        if (action is GameAction.Undo || action is GameAction.Redo) {
+            // Watch handles history locally and syncs the full state.
+            return
+        }
+        dispatchAction(action)
+    }
+
+    fun onStateReceivedFromWatch(state: MatchState) {
+        _matchState.value = state
+        _isMatchActive.value = true
+        syncStateToWatch(state)
     }
 
     fun syncStateToWatch(state: MatchState) {

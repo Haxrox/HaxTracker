@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="wear">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-09-15T05:49:48.755409100Z">
+        <DropdownSelection timestamp="2026-09-17T17:32:57.824592900Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=A:\bellc\Android\.android\avd\Pixel_8.avd" />
+              <DeviceId pluginId="Default" identifier="serial=192.168.1.129:42217;connection=e90d8df4" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,10 +15,10 @@
       </SelectionState>
       <SelectionState runConfigName="mobile">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-09-15T06:00:06.620647100Z">
+        <DropdownSelection timestamp="2026-09-15T06:05:16.888936Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=RFGL21X6BQP" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=A:\bellc\Android\.android\avd\Wear_OS_Large_Round.avd" />
             </handle>
           </Target>
         </DropdownSelection>
