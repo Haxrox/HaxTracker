@@ -44,7 +44,7 @@ class PlayerAndModelTest {
         val config = MatchConfig.defaultBadmintonDoubles("Lions", "Tigers")
         var state = GameEngine.newMatch(config)
 
-        assertTrue(state.spokenAnnouncement.contains("0, 0"))
+        assertTrue(state.spokenAnnouncement.contains("0-0"))
 
         // Game point state
         state = state.copy(scoreTeamA = 20, scoreTeamB = 18)

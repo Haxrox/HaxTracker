@@ -14,50 +14,78 @@
 
 ## 🚀 Key Features
 
-- 🏸 **Badminton Support**: Full support for BWF official scoring rules, serving rotations, deuce handling (win-by-two), and maximum score cap (sudden death at 30 points).
-- 🏓 **Pickleball Support**: Complete USAPA official scoring engine including `Score-Receiver-Server` callouts (e.g. `0-0-2`), side-out logic, and first-server exception for doubles.
-- 👥 **Singles & Doubles**: Seamless switching between 1v1 Singles and 2v2 Doubles formats.
-- 📐 **Dynamic Court Visualization**: Real-time 2D court layout rendering showing active server, active receiver, court positions, side swaps, and net line position.
-- ⌚ **Wear OS App & Companion**: Standalone and synchronized Wear OS app with Compose for Wear OS, Tiles, and Watch Face Complications.
-- 🔊 **Voice & TTS Announcements**: Built-in Text-to-Speech (TTS) score reader calling out scores and match states automatically after every point.
-- 🎛️ **Hardware Volume Control**: Score points effortlessly on court without touching the screen using physical device volume buttons (Volume Up / Down).
-- 📳 **Haptic Feedback Patterns**: Distinct haptic vibration signatures for points, game points, and match victories.
-- ↩️ **Full Undo / Redo History**: Complete state snapshots allowing instantaneous undo of scoring mistakes.
+### 🏸 Official Sports Engines & Rule-Sets
+- 🏸 **Badminton Scoring Engine (BWF Official)**: Complete support for rally point scoring, dynamic serving court rotation (Right on even, Left on odd), win-by-two deuce extension, and hard cap sudden death at 30 points.
+- 🏓 **Pickleball Scoring Engine (USAPA Official)**: Complete side-out scoring engine with official three-part callouts (`0-0-2` / `Score-Receiver-Server`), first-server exception for doubles, and side-out transitions.
+- 👥 **Singles & Doubles Formats**: Effortless switching between 1v1 Singles and 2v2 Doubles with automatic player rotation, server handoff, and diagonal receiving assignments.
+- 🏆 **Best-of-N Games Progression**: Support for Best of 1, 3, or 5 games with automatic set victory detection, set score archives, and court side swap triggers.
+
+### ⌚ Smartwatch & Wear OS Ecosystem
+- ⌚ **Standalone & Companion Modes**: Wear OS app functions 100% standalone on the watch or synchronized in real time with the paired Android phone.
+- 📐 **On-Wrist 2D Mini Court**: Real-time rendering of court geometry, active player positions, serving quadrants, and net lines directly on round watch displays.
+- ⚡ **Dual-Channel Live Sync**: Seamless two-way state syncing powered by Google Play Services `DataClient` (persistent state distribution) and `MessageClient` (low-latency direct RPC).
+- 🧩 **Wear OS Tiles & Complications**:
+  - **Tile Provider (`MainTileService`)**: Glanceable tile for quick score previews and one-tap match launches.
+  - **Watch Face Complication (`MainComplicationService`)**: Dynamic short-text complication displaying live scores right on your favorite watch face.
+- 🔒 **Always-On Screen Keep-Awake**: Automatic `FLAG_KEEP_SCREEN_ON` prevents display timeouts during fast-paced rallies.
+
+### 🎮 Effortless Controls & Rapid Mid-Game Input
+- 👆 **Split-Screen Giant Tap Zones**: High-contrast, responsive touch targets with animated ripple feedback for no-look score entry on court.
+- 🖐️ **Directional Swipe Gestures (Mobile & Wear OS)**:
+  - ⬆️ **Swipe Up**: Award +1 point to Team A
+  - ⬇️ **Swipe Down**: Award +1 point to Team B
+  - ➡️ **Swipe Right**: Instant Undo of last action
+  - ⬅️ **Swipe Left**: Redo undone action
+- 🎛️ **Physical Hardware Volume Control**: Log points mid-rally without glancing at the screen using device volume buttons (Volume Up = Serving Point, Volume Down = Receiving Point / Side-out).
+- ↩️ **Unlimited Undo / Redo History**: Complete immutable state snapshots allowing instantaneous correction of scoring mistakes.
+
+### 🔊 Audio, Sensory & Spectator Experience
+- 🗣️ **Text-to-Speech (TTS) Voice Announcements**: Automatic vocal callouts of scorelines, server assignments, game points, match points, and final victories on both Phone and Watch.
+- 📳 **Multi-Tiered Haptic Feedback Patterns**: Distinct vibration signatures differentiating between standard points, deuces, game points, and match victories.
+- 👁️ **High-Visibility Spectator Mode**: Full-screen dialog with oversized typography designed for referees, coaches, and spectators viewing from courtside.
+- ⏱️ **Rally & Match Timer Tracking**: Tracks rally timestamps and match durations.
 
 ---
 
-## 🏗️ Architecture & Stack
+## 🏗️ Architecture & Multi-Module Stack
 
-HaxTracker follows **Clean Architecture** principles and a modern multi-module Kotlin architecture:
+HaxTracker is engineered with **Clean Architecture**, separation of concerns, and unidirectional data flow (UDF):
 
 ```
 HaxTracker/
-├── core-game/       # Pure Kotlin state machine engine, rule-sets & math logic
-├── mobile/          # Android Phone UI (Jetpack Compose, ViewModel, Material 3)
-└── wear/            # Wear OS UI (Compose for Wear OS, Tiles, Complications)
+├── core-game/       # Pure Kotlin state machine engine, rule-sets, models & serializers
+├── mobile/          # Android Phone UI (Jetpack Compose, ViewModel, Material 3, TTS)
+└── wear/            # Wear OS UI (Compose for Wear OS, Mini Court, Tiles, Complications)
 ```
 
 ### Tech Stack
 - **Language**: 100% Kotlin
-- **UI Framework**: Jetpack Compose (Mobile) & Compose for Wear OS (Wearables)
-- **Design**: Material Design 3 (`androidx.compose.material3`)
+- **UI Toolkit**: Jetpack Compose (Phone) & Compose for Wear OS (Smartwatches)
+- **Design System**: Material Design 3 (`androidx.compose.material3` and Wear Material 3)
 - **State Management**: Kotlin StateFlow, Coroutines & Android ViewModel
-- **Audio & Hardware**: TextToSpeech API, Android Vibrator API, Key Event Interceptors
-- **Build System**: Gradle Kotlin DSL (`.gradle.kts`), Version Catalogs (`libs.versions.toml`)
-- **Testing**: JUnit 4 state machine unit tests covering all edge cases & score rule-sets
+- **Synchronization**: Google Play Services Wearable Data Layer (`DataClient` & `MessageClient`)
+- **Audio & Sensory**: Android `TextToSpeech`, Android `Vibrator` / `VibratorManager` APIs
+- **Build System**: Gradle Kotlin DSL (`.gradle.kts`), Version Catalogs (`gradle/libs.versions.toml`)
+- **Testing**: JUnit 4 unit tests with comprehensive coverage of sports engines, court algorithms, and sync pipelines
 
 ---
 
-## 🛠️ GitHub Actions CI/CD (1000% Reliability Guarantee)
+## 🛠️ GitHub Actions CI/CD Pipeline
 
-To guarantee HaxTracker works **1000%** reliably on every single commit and pull request, we maintain automated CI workflows:
+To ensure maximum stability and reliability across every pull request and commit, our automated CI pipeline verifies both mobile and smartwatch platforms:
 
-- 🧪 **Unit Tests**: Runs complete test suite across `:core-game`, `:mobile`, and `:wear`.
-- 🔍 **Android Linting**: Automated code quality and lint checks (`lintDebug`).
-- 📦 **Build Verification**: Compiles debug APKs for both Mobile (`:mobile`) and Wear OS (`:wear`).
-- 📱 **Multi-SDK Emulator Matrix**: Boots headless AVD emulators across multiple Android SDK versions (API 26, 30, 34), installs the app, launches `MainActivity`, verifies process stability, and captures screenshots.
+- 🧪 **Unit Test Suite**: Runs automated unit tests across all modules (`:core-game`, `:mobile`, and `:wear`) covering:
+  - BWF Badminton scoring rules, deuce, and 30-point sudden death cap
+  - USAPA Pickleball scoring, side-out logic, and first-server exception
+  - Dynamic 2D Court position calculations and slot assignments
+  - State serialization, round-trip JSON parsing, and action dispatching
+  - Phone and Wear sync repositories, state transitions, and undo/redo handling
+- 🔍 **Android Lint Analysis**: Strict code quality, manifest integrity, and resource checks via `./gradlew lintDebug`.
+- 📦 **Multi-Artifact Build**: Compiles debug APKs for both Mobile (`mobile-debug.apk`) and Wear OS (`wear-debug.apk`).
+- 📱 **Mobile Multi-SDK Emulator Matrix**: Boots headless Android Virtual Devices (API 26, 30, 34) on `google_apis` x86_64, installs the mobile APK, launches `MainActivity`, verifies process stability, and archives launch screenshots.
+- ⌚ **Wear OS Smartwatch Emulator Matrix**: Boots Wear OS AVDs (API 30, 34) using `android-wear` x86_64 system images and the `wearos_small_round` profile, installs the wearable APK, launches Wear OS `MainActivity`, verifies smartwatch process stability, and captures round watch screenshots.
 
-Workflows location: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+Workflows configuration: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 
 ---
 
@@ -74,13 +102,16 @@ Workflows location: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 git clone https://github.com/Haxrox/HaxTracker.git
 cd HaxTracker
 
-# Build the project
+# Build all modules
 ./gradlew build
 
-# Run unit tests
+# Run comprehensive unit tests across core-game, mobile, and wear
 ./gradlew test
 
-# Assemble Debug APKs
+# Run Android lint checks
+./gradlew lintDebug
+
+# Assemble Debug APKs for Phone and Smartwatch
 ./gradlew assembleDebug
 ```
 

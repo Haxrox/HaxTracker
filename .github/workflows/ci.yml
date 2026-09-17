@@ -58,8 +58,8 @@ jobs:
             mobile/build/outputs/apk/debug/*.apk
             wear/build/outputs/apk/debug/*.apk
 
-  emulator-launch-matrix:
-    name: Verify App Launch (API ${{ matrix.api-level }})
+  mobile-emulator-matrix:
+    name: Verify Mobile Launch (API ${{ matrix.api-level }})
     runs-on: ubuntu-latest
     needs: build-and-test
     strategy:
@@ -93,7 +93,7 @@ jobs:
         with:
           name: haxtracker-debug-apks
 
-      - name: Run Android Emulator & Launch App
+      - name: Run Android Mobile Emulator & Launch App
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: ${{ matrix.api-level }}
@@ -113,15 +113,85 @@ jobs:
             
             echo "Verifying application process is alive..."
             adb shell pidof com.haxtech.haxtracker >/dev/null || { echo "ERROR: Process died after launch!"; adb logcat -d '*:E'; exit 1; }
-            echo "SUCCESS: HaxTracker is running on API level ${{ matrix.api-level }}"
+            echo "SUCCESS: HaxTracker Mobile is running on API level ${{ matrix.api-level }}"
             
             echo "Taking screenshot..."
-            adb shell screencap -p /sdcard/launch_screen_api_${{ matrix.api-level }}.png
-            adb pull /sdcard/launch_screen_api_${{ matrix.api-level }}.png .
+            adb shell screencap -p /sdcard/launch_screen_mobile_api_${{ matrix.api-level }}.png
+            adb pull /sdcard/launch_screen_mobile_api_${{ matrix.api-level }}.png .
 
-      - name: Upload Emulator Launch Screenshot
+      - name: Upload Mobile Emulator Launch Screenshot
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: launch-screenshot-api-${{ matrix.api-level }}
-          path: launch_screen_api_${{ matrix.api-level }}.png
+          name: launch-screenshot-mobile-api-${{ matrix.api-level }}
+          path: launch_screen_mobile_api_${{ matrix.api-level }}.png
+
+  wear-emulator-matrix:
+    name: Verify Wear OS Watch Launch (API ${{ matrix.api-level }})
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [30, 34]
+        target: [android-wear]
+        arch: [x86_64]
+        profile: [wearos_small_round]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Enable KVM Hardware Acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm-rules.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Download Debug APKs
+        uses: actions/download-artifact@v4
+        with:
+          name: haxtracker-debug-apks
+
+      - name: Run Wear OS Emulator & Launch Smartwatch App
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          profile: ${{ matrix.profile }}
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: |
+            echo "Installing HaxTracker Wear OS APK..."
+            adb install wear/build/outputs/apk/debug/*.apk || adb install wear-debug.apk
+            
+            echo "Launching HaxTracker Wear Activity..."
+            adb shell am start -n com.haxtech.haxtracker/com.haxtech.haxtracker.wear.presentation.MainActivity
+            
+            sleep 5
+            
+            echo "Verifying Wear application process is alive..."
+            adb shell pidof com.haxtech.haxtracker >/dev/null || { echo "ERROR: Wear OS Process died after launch!"; adb logcat -d '*:E'; exit 1; }
+            echo "SUCCESS: HaxTracker Wear is running on Wear OS API level ${{ matrix.api-level }}"
+            
+            echo "Taking Wear OS screenshot..."
+            adb shell screencap -p /sdcard/launch_screen_wear_api_${{ matrix.api-level }}.png
+            adb pull /sdcard/launch_screen_wear_api_${{ matrix.api-level }}.png .
+
+      - name: Upload Wear Emulator Launch Screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: launch-screenshot-wear-api-${{ matrix.api-level }}
+          path: launch_screen_wear_api_${{ matrix.api-level }}.png

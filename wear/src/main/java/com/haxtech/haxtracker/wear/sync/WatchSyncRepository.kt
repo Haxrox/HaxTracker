@@ -89,6 +89,10 @@ object WatchSyncRepository {
         }
     }
 
+    fun updateLocalState(newState: MatchState) {
+        _matchState.value = newState
+    }
+
     fun updateLocalState(context: Context, newState: MatchState) {
         _matchState.value = newState
         syncStateToPhone(context, newState)

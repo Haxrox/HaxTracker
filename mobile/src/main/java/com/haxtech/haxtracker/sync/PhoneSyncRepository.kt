@@ -46,10 +46,6 @@ object PhoneSyncRepository {
     }
 
     fun dispatchActionFromWatch(action: GameAction) {
-        if (action is GameAction.Undo || action is GameAction.Redo) {
-            // Watch handles history locally and syncs the full state.
-            return
-        }
         dispatchAction(action)
     }
 
