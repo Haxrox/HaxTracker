@@ -133,10 +133,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        api-level: [30, 34]
-        target: [android-wear]
-        arch: [x86_64]
-        profile: [wearos_small_round]
+        include:
+          - api-level: 30
+            target: android-wear
+            arch: x86
+            profile: wearos_small_round
+          - api-level: 34
+            target: android-wear
+            arch: x86_64
+            profile: wearos_small_round
 
     steps:
       - name: Checkout Code
