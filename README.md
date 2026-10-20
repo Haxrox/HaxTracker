@@ -1,13 +1,14 @@
 # 🏸 🏓 HaxTracker
 
 [![100% Vibecoded](https://img.shields.io/badge/100%25-Vibecoded-ff69b4?style=for-the-badge&logo=sparkles&logoColor=white)](https://github.com/Haxrox/HaxTracker)
-[![Android CI](https://github.com/Haxrox/HaxTracker/actions/workflows/ci.yml/badge.svg?style=for-the-badge)](https://github.com/Haxrox/HaxTracker/actions/workflows/ci.yml)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.9%2B-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![Android SDK](https://img.shields.io/badge/Min%20SDK-26%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
 [![Wear OS](https://img.shields.io/badge/Wear%20OS-3.0%2B-4285F4?style=for-the-badge&logo=wearos&logoColor=white)](https://developer.android.com/wear)
 
+[![Android CI](https://github.com/Haxrox/HaxTracker/actions/workflows/ci.yml/badge.svg?style=for-the-badge)](https://github.com/Haxrox/HaxTracker/actions/workflows/ci.yml)
+
 > **HaxTracker** is a modern, modular, feature-packed score tracking application for **Badminton** and **Pickleball** built for Android Mobile and Wear OS smartwatches using Jetpack Compose.
-> 
+>
 > ✨ **This application is 100% vibecoded.** ✨ Built from the ground up with AI pair programming, maximum aesthetics, and zero compromises on architectural quality.
 
 ---
