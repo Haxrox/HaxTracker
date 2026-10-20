@@ -5,13 +5,13 @@ plugins {
 
 android {
     namespace = "com.haxtech.haxtracker"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.haxtech.haxtracker"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 10001
+        targetSdk = 36
+        versionCode = 10002
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"

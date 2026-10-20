@@ -5,13 +5,13 @@ plugins {
 
 android {
     namespace = "com.haxtech.haxtracker.wear"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.haxtech.haxtracker"
         minSdk = 30
-        targetSdk = 34
-        versionCode = 20001
+        targetSdk = 36
+        versionCode = 20002
         versionName = "1.0.0"
     }
 
