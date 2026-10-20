@@ -3,8 +3,17 @@ name: Android CI
 on:
   push:
     branches: [ "main" ]
+    tags:
+      - 'v*'
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      force_release:
+        description: 'Force create release even if version tag already exists'
+        required: false
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -200,3 +209,108 @@ jobs:
         with:
           name: launch-screenshot-wear-api-${{ matrix.api-level }}
           path: launch_screen_wear_api_${{ matrix.api-level }}.png
+
+  create-github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make Gradlew Executable
+        run: chmod +x gradlew
+
+      - name: Determine Version and Release Status
+        id: check_release
+        run: |
+          git fetch --tags origin || true
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            TAG_NAME="${{ github.ref_name }}"
+            echo "Triggered directly by tag push: $TAG_NAME"
+            echo "create_release=true" >> $GITHUB_OUTPUT
+            echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+            echo "release_name=HaxTracker $TAG_NAME" >> $GITHUB_OUTPUT
+          else
+            # Extract versionName from mobile/build.gradle.kts
+            VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' mobile/build.gradle.kts || echo "1.0.0")
+            TAG_NAME="v${VERSION_NAME}"
+            echo "Extracted version from mobile/build.gradle.kts: $VERSION_NAME -> Tag: $TAG_NAME"
+            
+            if git tag -l "$TAG_NAME" | grep -q "^$TAG_NAME$"; then
+              echo "Tag $TAG_NAME already exists in remote."
+              if [[ "${{ inputs.force_release }}" == "true" ]]; then
+                echo "force_release is true. Proceeding with release."
+                echo "create_release=true" >> $GITHUB_OUTPUT
+                echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+                echo "release_name=HaxTracker $TAG_NAME" >> $GITHUB_OUTPUT
+              else
+                echo "Skipping release creation because tag $TAG_NAME already exists."
+                echo "create_release=false" >> $GITHUB_OUTPUT
+              fi
+            else
+              echo "New Android release detected! Tag $TAG_NAME does not exist yet."
+              echo "create_release=true" >> $GITHUB_OUTPUT
+              echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+              echo "release_name=HaxTracker $TAG_NAME" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Build Release Bundles and APKs
+        if: steps.check_release.outputs.create_release == 'true'
+        run: |
+          ./gradlew bundleRelease assembleRelease assembleDebug --stacktrace
+
+      - name: Prepare Release Assets
+        if: steps.check_release.outputs.create_release == 'true'
+        run: |
+          mkdir -p release-assets
+          
+          # Include pre-built/committed signed bundles if present
+          if [ -f "mobile/release/mobile-release.aab" ]; then
+            cp mobile/release/mobile-release.aab release-assets/haxtracker-mobile-signed.aab
+          fi
+          if [ -f "wear/release/wear-release.aab" ]; then
+            cp wear/release/wear-release.aab release-assets/haxtracker-wear-signed.aab
+          fi
+          
+          # Include built bundles
+          find mobile/build/outputs/bundle/release -name "*.aab" -exec cp {} release-assets/haxtracker-mobile-bundle.aab \; 2>/dev/null || true
+          find wear/build/outputs/bundle/release -name "*.aab" -exec cp {} release-assets/haxtracker-wear-bundle.aab \; 2>/dev/null || true
+          
+          # Include built APKs (release and debug)
+          find mobile/build/outputs/apk/release -name "*.apk" -exec cp {} release-assets/haxtracker-mobile-release.apk \; 2>/dev/null || true
+          find wear/build/outputs/apk/release -name "*.apk" -exec cp {} release-assets/haxtracker-wear-release.apk \; 2>/dev/null || true
+          find mobile/build/outputs/apk/debug -name "*.apk" -exec cp {} release-assets/haxtracker-mobile-debug.apk \; 2>/dev/null || true
+          find wear/build/outputs/apk/debug -name "*.apk" -exec cp {} release-assets/haxtracker-wear-debug.apk \; 2>/dev/null || true
+          
+          echo "Files to attach to GitHub Release:"
+          ls -la release-assets/
+
+      - name: Publish GitHub Release
+        if: steps.check_release.outputs.create_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.check_release.outputs.tag_name }}
+          name: ${{ steps.check_release.outputs.release_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          files: release-assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
