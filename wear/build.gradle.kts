@@ -11,8 +11,8 @@ android {
         applicationId = "com.haxtech.haxtracker"
         minSdk = 30
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 20001
+        versionName = "1.0.0"
     }
 
     buildTypes {
@@ -20,6 +20,10 @@ android {
             optimization {
                 enable = false
             }
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {
