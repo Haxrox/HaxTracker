@@ -27,7 +27,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -36,7 +36,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Make Gradlew Executable
         run: chmod +x gradlew
@@ -52,7 +52,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-results
           path: |
@@ -61,7 +61,7 @@ jobs:
 
       - name: Upload Debug APKs
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: haxtracker-debug-apks
           path: |
@@ -81,7 +81,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -90,7 +90,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Enable KVM Hardware Acceleration
         run: |
@@ -99,7 +99,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Download Debug APKs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: haxtracker-debug-apks
 
@@ -131,7 +131,7 @@ jobs:
 
       - name: Upload Mobile Emulator Launch Screenshot
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: launch-screenshot-mobile-api-${{ matrix.api-level }}
           path: launch_screen_mobile_api_${{ matrix.api-level }}.png
@@ -155,7 +155,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -164,7 +164,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Enable KVM Hardware Acceleration
         run: |
@@ -173,7 +173,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Download Debug APKs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: haxtracker-debug-apks
 
@@ -237,7 +237,7 @@ jobs:
 
       - name: Upload Wear Emulator Launch Screenshot
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: launch-screenshot-wear-api-${{ matrix.api-level }}
           path: launch_screen_wear_api_${{ matrix.api-level }}.png
@@ -298,7 +298,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -309,7 +309,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Make Gradlew Executable
         run: chmod +x gradlew
@@ -382,7 +382,7 @@ jobs:
 
       - name: Publish GitHub Release
         if: steps.check_release.outputs.create_release == 'true'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.check_release.outputs.tag_name }}
           name: ${{ steps.check_release.outputs.release_name }}
