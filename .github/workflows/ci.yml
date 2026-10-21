@@ -200,3 +200,24 @@ jobs:
         with:
           name: launch-screenshot-wear-api-${{ matrix.api-level }}
           path: launch_screen_wear_api_${{ matrix.api-level }}.png
+
+  ci-gate:
+    name: CI Gate
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    needs:
+      - build-and-test
+      - mobile-emulator-matrix
+      - wear-emulator-matrix
+    steps:
+      - name: Verify all CI jobs succeeded
+        run: |
+          if [[ "${{ needs.build-and-test.result }}" != "success" || \
+                "${{ needs.mobile-emulator-matrix.result }}" != "success" || \
+                "${{ needs.wear-emulator-matrix.result }}" != "success" ]]; then
+            echo "CI Gate failed because one or more upstream jobs did not succeed."
+            echo "build-and-test=${{ needs.build-and-test.result }}"
+            echo "mobile-emulator-matrix=${{ needs.mobile-emulator-matrix.result }}"
+            echo "wear-emulator-matrix=${{ needs.wear-emulator-matrix.result }}"
+            exit 1
+          fi
