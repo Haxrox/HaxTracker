@@ -43,8 +43,7 @@ object WatchSyncRepository {
                         break
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } catch (_: Exception) {
             } finally {
                 dataBuffer.release()
             }
@@ -67,8 +66,7 @@ object WatchSyncRepository {
             putDataMapReq.dataMap.putLong("timestamp", System.currentTimeMillis())
             val req = putDataMapReq.asPutDataRequest().setUrgent()
             Wearable.getDataClient(context).putDataItem(req)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
 
         // 2. MessageClient
@@ -84,8 +82,7 @@ object WatchSyncRepository {
                     }
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
     }
 
@@ -109,8 +106,7 @@ object WatchSyncRepository {
             putDataMapReq.dataMap.putLong("timestamp", System.currentTimeMillis())
             val req = putDataMapReq.asPutDataRequest().setUrgent()
             Wearable.getDataClient(context).putDataItem(req)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
 
         // 2. MessageClient
@@ -123,8 +119,7 @@ object WatchSyncRepository {
                     messageClient.sendMessage(node.id, "/match_state_watch", bytes)
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
     }
 }
