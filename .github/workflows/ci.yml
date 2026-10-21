@@ -52,7 +52,7 @@ jobs:
 
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: unit-test-results
           path: |
@@ -61,7 +61,7 @@ jobs:
 
       - name: Upload Debug APKs
         if: success()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: haxtracker-debug-apks
           path: |
@@ -131,7 +131,7 @@ jobs:
 
       - name: Upload Mobile Emulator Launch Screenshot
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: launch-screenshot-mobile-api-${{ matrix.api-level }}
           path: launch_screen_mobile_api_${{ matrix.api-level }}.png
@@ -237,7 +237,7 @@ jobs:
 
       - name: Upload Wear Emulator Launch Screenshot
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: launch-screenshot-wear-api-${{ matrix.api-level }}
           path: launch_screen_wear_api_${{ matrix.api-level }}.png
