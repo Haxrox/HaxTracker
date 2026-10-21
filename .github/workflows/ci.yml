@@ -5,6 +5,8 @@ on:
     branches: [ "main" ]
     tags:
       - 'v*'
+  pull_request:
+    branches: [ "main" ]
   workflow_dispatch:
     inputs:
       force_release:
@@ -20,6 +22,7 @@ concurrency:
 jobs:
   build-and-test:
     name: Build & Unit Test
+    if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' || !startsWith(github.event.head_commit.message, 'Merge pull request') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -241,7 +244,7 @@ jobs:
 
   ci-gate:
     name: CI Gate
-    if: ${{ always() }}
+    if: ${{ always() && (github.event_name != 'push' || github.ref != 'refs/heads/main' || !startsWith(github.event.head_commit.message, 'Merge pull request')) }}
     runs-on: ubuntu-latest
     permissions: {}
     needs:
