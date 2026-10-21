@@ -1,15 +1,36 @@
-# 🏸 🏓 HaxTracker
+<p align="center">
+  <img src="assets/HaxTracker.jpg" alt="HaxTracker Logo" width="160" style="border-radius: 28px;" />
+</p>
 
-[![100% Vibecoded](https://img.shields.io/badge/100%25-Vibecoded-ff69b4?style=for-the-badge&logo=sparkles&logoColor=white)](https://github.com/Haxrox/HaxTracker)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9%2B-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
-[![Android SDK](https://img.shields.io/badge/Min%20SDK-26%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
-[![Wear OS](https://img.shields.io/badge/Wear%20OS-3.0%2B-4285F4?style=for-the-badge&logo=wearos&logoColor=white)](https://developer.android.com/wear)
+<h1 align="center">🏸 🏓 HaxTracker</h1>
 
-[![Android CI](https://github.com/Haxrox/HaxTracker/actions/workflows/ci.yml/badge.svg?style=for-the-badge)](https://github.com/Haxrox/HaxTracker/actions/workflows/ci.yml)
+<p align="center">
+  <a href="https://github.com/Haxrox/HaxTracker"><img src="https://img.shields.io/badge/100%25-Vibecoded-ff69b4?style=for-the-badge&logo=sparkles&logoColor=white" alt="100% Vibecoded" /></a>
+  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.0%2B-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin" /></a>
+  <a href="https://developer.android.com"><img src="https://img.shields.io/badge/Min%20SDK-26%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android SDK" /></a>
+  <a href="https://developer.android.com/wear"><img src="https://img.shields.io/badge/Wear%20OS-3.0%2B-4285F4?style=for-the-badge&logo=wearos&logoColor=white" alt="Wear OS" /></a>
+  <a href="https://github.com/Haxrox/HaxTracker/actions/workflows/ci.yml"><img src="https://github.com/Haxrox/HaxTracker/actions/workflows/ci.yml/badge.svg?style=for-the-badge" alt="Android CI" /></a>
+</p>
+
+<p align="center">
+  <img src="assets/HaxTracker-FeatureGraphic.png" alt="HaxTracker Feature Graphic" width="100%" />
+</p>
 
 > **HaxTracker** is a modern, modular, feature-packed score tracking application for **Badminton** and **Pickleball** built for Android Mobile and Wear OS smartwatches using Jetpack Compose.
 >
 > ✨ **This application is 100% vibecoded.** ✨ Built from the ground up with AI pair programming, maximum aesthetics, and zero compromises on architectural quality.
+
+---
+
+## 📸 Screenshots & Showcase
+
+<p align="center">
+  <img src="assets/Screenshot1.jpg" alt="Mobile Match Screen" width="30%" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="assets/Screenshot2.jpg" alt="Mobile Court Visualizer" width="30%" />
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="assets/Watch-Screenshot1.png" alt="Wear OS Watch Interface" width="24%" />
+</p>
 
 ---
 
@@ -95,7 +116,7 @@ Workflows configuration: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
 ### Prerequisites
 - Android Studio Ladybug (2024.2+) or newer
 - JDK 17+
-- Android SDK 35 (`compileSdk = 35`)
+- Android SDK 36 (`compileSdk = 36`)
 
 ### Clone & Build
 ```bash
