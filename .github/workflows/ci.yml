@@ -167,6 +167,22 @@ jobs:
         with:
           name: haxtracker-debug-apks
 
+      - name: Preinstall Wear API 30 system image (retry)
+        if: matrix.api-level == 30
+        run: |
+          yes | sdkmanager --licenses > /dev/null
+          for attempt in 1 2 3; do
+            echo "Installing Wear API 30 system image (attempt ${attempt}/3)..."
+            if sdkmanager --install "system-images;android-30;android-wear;x86" --channel=0; then
+              exit 0
+            fi
+            echo "Install attempt ${attempt} failed. Retrying after cleanup..."
+            rm -rf "${ANDROID_HOME}/system-images/android-30/android-wear/x86" "${ANDROID_HOME}/.temp" || true
+            sleep 10
+          done
+          echo "Failed to install Wear API 30 system image after 3 attempts."
+          exit 1
+
       - name: Run Wear OS Emulator & Launch Smartwatch App
         uses: reactivecircus/android-emulator-runner@v2
         with:
