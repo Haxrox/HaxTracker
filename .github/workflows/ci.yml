@@ -176,6 +176,37 @@ jobs:
         with:
           name: haxtracker-debug-apks
 
+      - name: Preinstall Wear API 30 system image (retry)
+        if: matrix.api-level == 30
+        run: |
+          SDKMANAGER_BIN="$(command -v sdkmanager || true)"
+          if [ -z "${SDKMANAGER_BIN}" ]; then
+            for candidate in \
+              "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" \
+              "${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager"; do
+              if [ -x "${candidate}" ]; then
+                SDKMANAGER_BIN="${candidate}"
+                break
+              fi
+            done
+          fi
+          if [ -z "${SDKMANAGER_BIN}" ]; then
+            echo "sdkmanager binary not found on PATH or Android SDK cmdline-tools locations."
+            exit 1
+          fi
+          yes | "${SDKMANAGER_BIN}" --licenses > /dev/null
+          for attempt in 1 2 3; do
+            echo "Installing Wear API 30 system image (attempt ${attempt}/3)..."
+            if "${SDKMANAGER_BIN}" --install "system-images;android-30;android-wear;x86" --channel=0; then
+              exit 0
+            fi
+            echo "Install attempt ${attempt} failed. Retrying after cleanup..."
+            rm -rf "${ANDROID_HOME}/system-images/android-30/android-wear/x86" "${ANDROID_HOME}/.temp" || true
+            sleep 10
+          done
+          echo "Failed to install Wear API 30 system image after 3 attempts."
+          exit 1
+
       - name: Run Wear OS Emulator & Launch Smartwatch App
         uses: reactivecircus/android-emulator-runner@v2
         with:
