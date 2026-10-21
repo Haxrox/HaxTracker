@@ -99,7 +99,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Download Debug APKs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: haxtracker-debug-apks
 
@@ -173,7 +173,7 @@ jobs:
           sudo udevadm trigger --name-match=kvm
 
       - name: Download Debug APKs
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: haxtracker-debug-apks
 
