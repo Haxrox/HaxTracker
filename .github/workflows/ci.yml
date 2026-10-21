@@ -5,8 +5,6 @@ on:
     branches: [ "main" ]
     tags:
       - 'v*'
-  pull_request:
-    branches: [ "main" ]
   workflow_dispatch:
     inputs:
       force_release:
@@ -253,13 +251,38 @@ jobs:
     steps:
       - name: Verify all CI jobs succeeded
         run: |
-          if [[ "${{ needs.build-and-test.result }}" != "success" || \
-                "${{ needs.mobile-emulator-matrix.result }}" != "success" || \
-                "${{ needs.wear-emulator-matrix.result }}" != "success" ]]; then
+          BUILD_AND_TEST_RESULT="${{ needs.build-and-test.result }}"
+          MOBILE_MATRIX_RESULT="${{ needs.mobile-emulator-matrix.result }}"
+          WEAR_MATRIX_RESULT="${{ needs.wear-emulator-matrix.result }}"
+
+          annotate_check() {
+            local check_name="$1"
+            local check_result="$2"
+            if [[ "${check_result}" == "success" ]]; then
+              echo "::notice title=CI Gate::✅ ${check_name}: ${check_result}"
+            else
+              echo "::error title=CI Gate::❌ ${check_name}: ${check_result}"
+            fi
+          }
+
+          annotate_check "Build & Unit Test (unit tests, lint, assemble)" "${BUILD_AND_TEST_RESULT}"
+          annotate_check "Verify Mobile Launch Matrix (API 26, 30, 34)" "${MOBILE_MATRIX_RESULT}"
+          annotate_check "Verify Wear OS Launch Matrix (API 30, 34)" "${WEAR_MATRIX_RESULT}"
+
+          {
+            echo "## CI Gate Report"
+            echo ""
+            echo "| Check | Status |"
+            echo "|---|---|"
+            echo "| Build & Unit Test (unit tests, lint, assemble) | ${BUILD_AND_TEST_RESULT} |"
+            echo "| Verify Mobile Launch Matrix (API 26, 30, 34) | ${MOBILE_MATRIX_RESULT} |"
+            echo "| Verify Wear OS Launch Matrix (API 30, 34) | ${WEAR_MATRIX_RESULT} |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          if [[ "${BUILD_AND_TEST_RESULT}" != "success" || \
+                "${MOBILE_MATRIX_RESULT}" != "success" || \
+                "${WEAR_MATRIX_RESULT}" != "success" ]]; then
             echo "CI Gate failed because one or more upstream jobs did not succeed."
-            echo "build-and-test=${{ needs.build-and-test.result }}"
-            echo "mobile-emulator-matrix=${{ needs.mobile-emulator-matrix.result }}"
-            echo "wear-emulator-matrix=${{ needs.wear-emulator-matrix.result }}"
             exit 1
           fi
   create-github-release:
