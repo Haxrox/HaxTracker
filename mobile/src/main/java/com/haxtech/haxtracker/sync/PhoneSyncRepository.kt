@@ -67,8 +67,7 @@ object PhoneSyncRepository {
             putDataMapReq.dataMap.putLong("timestamp", System.currentTimeMillis())
             val req = putDataMapReq.asPutDataRequest().setUrgent()
             Wearable.getDataClient(context).putDataItem(req)
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
 
         // 2. MessageClient
@@ -81,8 +80,7 @@ object PhoneSyncRepository {
                     messageClient.sendMessage(node.id, "/match_state", bytes)
                 }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
         }
     }
 }
