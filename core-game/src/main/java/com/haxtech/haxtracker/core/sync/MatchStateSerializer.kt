@@ -124,7 +124,6 @@ object MatchStateSerializer {
 
             state.copy(history = historyList, redoStack = redoList)
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }
@@ -242,7 +241,6 @@ object MatchStateSerializer {
                 else -> null
             }
         } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }
