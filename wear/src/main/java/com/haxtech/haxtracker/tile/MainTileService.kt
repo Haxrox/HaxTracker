@@ -16,7 +16,7 @@ import androidx.wear.tiles.RequestBuilders.ResourcesRequest
 import androidx.wear.tiles.tooling.preview.Preview
 import androidx.wear.tiles.tooling.preview.TilePreviewData
 import androidx.wear.tooling.preview.devices.WearDevices
-import com.haxtech.haxtracker.wear.R
+import com.haxtech.haxtracker.wear.sync.WatchSyncRepository
 import com.google.common.util.concurrent.ListenableFuture
 
 private const val RESOURCES_VERSION = "0"
@@ -39,6 +39,8 @@ private fun tile(
     requestParams: RequestBuilders.TileRequest,
     context: Context,
 ): TileBuilders.Tile {
+    val state = WatchSyncRepository.matchState.value
+    val tileContent = "${state.config.sport.displayName}\n${state.scoreTeamA} - ${state.scoreTeamB}"
     return TileBuilders.Tile.Builder()
         .setResourcesVersion(RESOURCES_VERSION)
         .setTileTimeline(
@@ -47,7 +49,7 @@ private fun tile(
                     primaryLayout(
                         mainSlot = {
                             text(
-                                context.getString(R.string.hello_world, "Tile").layoutString,
+                                tileContent.layoutString,
                                 typography = BODY_LARGE
                             )
                         }

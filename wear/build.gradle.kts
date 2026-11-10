@@ -11,8 +11,8 @@ android {
         applicationId = "com.haxtech.haxtracker"
         minSdk = 30
         targetSdk = 36
-        versionCode = 20002
-        versionName = "1.0.0"
+        versionCode = 20006
+        versionName = "1.0.2"
     }
 
     buildTypes {

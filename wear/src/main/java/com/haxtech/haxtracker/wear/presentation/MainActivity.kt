@@ -9,12 +9,16 @@ import android.os.Vibrator
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,13 +32,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
@@ -48,6 +58,7 @@ import com.haxtech.haxtracker.core.engine.CourtPositionCalculator
 import com.haxtech.haxtracker.core.engine.CourtSlot
 import com.haxtech.haxtracker.core.engine.GameEngine
 import com.haxtech.haxtracker.core.model.*
+import com.haxtech.haxtracker.wear.R
 import com.haxtech.haxtracker.wear.audio.ScoreTtsAnnouncer
 import com.haxtech.haxtracker.wear.presentation.theme.*
 import com.haxtech.haxtracker.wear.sync.WatchSyncRepository
@@ -70,6 +81,13 @@ fun WearApp() {
     val context = LocalContext.current
     val matchState by WatchSyncRepository.matchState.collectAsState()
     val isConnectedToPhone by WatchSyncRepository.isConnectedToPhone.collectAsState()
+
+    var showSplash by remember { mutableStateOf(true) }
+
+    LaunchedEffect(Unit) {
+        delay(3000L)
+        showSplash = false
+    }
 
     val announcer = remember { ScoreTtsAnnouncer(context) }
     DisposableEffect(Unit) {
@@ -140,7 +158,17 @@ fun WearApp() {
     val isFinished = matchState.isGameFinished || matchState.isMatchFinished
 
     HaxTrackerTheme {
-        AppScaffold {
+        AnimatedContent(
+            targetState = showSplash,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
+            },
+            label = "SplashToMainTransition"
+        ) { isSplash ->
+            if (isSplash) {
+                SplashScreen()
+            } else {
+                AppScaffold {
             ScreenScaffold { contentPadding ->
                 Box(
                     modifier = Modifier
@@ -282,6 +310,8 @@ fun WearApp() {
             }
         }
     }
+}
+}
 }
 
 @Composable
@@ -856,4 +886,54 @@ private fun MatchFinishedCard(
 @Composable
 fun DefaultPreview() {
     WearApp()
+}
+
+@Composable
+fun SplashScreen(
+    modifier: Modifier = Modifier
+) {
+    val iconPainter = rememberAppIconPainter()
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(PitchBlack),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = iconPainter,
+            contentDescription = stringResource(id = R.string.app_name),
+            modifier = Modifier
+                .size(48.dp)
+                .clip(CircleShape)
+        )
+    }
+}
+
+@Composable
+private fun rememberAppIconPainter(): Painter {
+    val context = LocalContext.current
+    return remember(context) {
+        val drawable = ContextCompat.getDrawable(context, R.mipmap.ic_launcher_round)
+            ?: ContextCompat.getDrawable(context, R.mipmap.ic_launcher)
+
+        if (drawable != null) {
+            val width = if (drawable.intrinsicWidth > 0) drawable.intrinsicWidth else 48
+            val height = if (drawable.intrinsicHeight > 0) drawable.intrinsicHeight else 48
+            val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+            val canvas = android.graphics.Canvas(bitmap)
+            drawable.setBounds(0, 0, canvas.width, canvas.height)
+            drawable.draw(canvas)
+            BitmapPainter(bitmap.asImageBitmap())
+        } else {
+            ColorPainter(Color.Transparent)
+        }
+    }
+}
+
+@WearPreviewDevices
+@Composable
+fun SplashScreenPreview() {
+    HaxTrackerTheme {
+        SplashScreen()
+    }
 }
