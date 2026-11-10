@@ -13,8 +13,8 @@ android {
         applicationId = "com.haxtech.haxtracker"
         minSdk = 26
         targetSdk = 36
-        versionCode = providers.gradleProperty("versionCode").map(String::toInt).getOrElse(10002)
-        versionName = providers.gradleProperty("versionName").getOrElse("1.0.0")
+        versionCode = providers.gradleProperty("versionCode").map(String::toInt).getOrElse(10003)
+        versionName = providers.gradleProperty("versionName").getOrElse("1.0.1")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
