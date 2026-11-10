@@ -119,6 +119,14 @@ gate for the current `main` commit. It builds signed mobile and Wear OS
 AAB/APK artifacts, tags that commit, and creates a GitHub release with
 automatically generated notes linking the merged pull requests.
 
+Mobile and Wear OS use separate monotonically increasing version codes while
+sharing the same version name. The attached AABs are intended for their
+respective Google Play form factors.
+
+After a successful release build, the release workflow commits the computed
+version name and fallback version codes back to both Gradle module files, so
+local Android Studio release builds use the latest published values.
+
 The repository must have these signing secrets configured before publishing:
 `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
 and `ANDROID_KEY_PASSWORD`. The AAB files attached to the release are the

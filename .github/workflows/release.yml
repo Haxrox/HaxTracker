@@ -46,19 +46,38 @@ jobs:
       - name: Determine Next Release Version
         run: |
           git fetch --tags --force origin
-          CURRENT_VERSION_NAME=$(grep -oP 'versionName\s*=\s*"\K[^"]+' mobile/build.gradle.kts | head -n 1)
-          CURRENT_VERSION_CODE=$(grep -oP 'versionCode\s*=\s*[^)]*\K[0-9]+' mobile/build.gradle.kts | head -n 1)
+          CURRENT_VERSION_NAME=$(sed -n 's/.*versionName = providers.gradleProperty("versionName").getOrElse("\([^"]*\)").*/\1/p' mobile/build.gradle.kts | head -n 1)
+          MOBILE_VERSION_CODE=$(sed -n 's/.*versionCode = providers.gradleProperty("versionCode").*getOrElse(\([0-9][0-9]*\)).*/\1/p' mobile/build.gradle.kts | head -n 1)
+          WEAR_VERSION_CODE=$(sed -n 's/.*versionCode = providers.gradleProperty("versionCode").*getOrElse(\([0-9][0-9]*\)).*/\1/p' wear/build.gradle.kts | head -n 1)
+          if [[ -z "${CURRENT_VERSION_NAME}" ]]; then
+            CURRENT_VERSION_NAME=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' mobile/build.gradle.kts | head -n 1)
+          fi
+          if [[ -z "${MOBILE_VERSION_CODE}" ]]; then
+            MOBILE_VERSION_CODE=$(sed -n 's/.*versionCode = \([0-9][0-9]*\).*/\1/p' mobile/build.gradle.kts | head -n 1)
+          fi
+          if [[ -z "${WEAR_VERSION_CODE}" ]]; then
+            WEAR_VERSION_CODE=$(sed -n 's/.*versionCode = \([0-9][0-9]*\).*/\1/p' wear/build.gradle.kts | head -n 1)
+          fi
           LATEST_TAG=$(git tag --list 'v*' --sort=-version:refname | head -n 1)
           if [[ -n "${LATEST_TAG}" ]]; then
             TAG_VERSION="${LATEST_TAG#v}"
-            TAG_VERSION_CODE=$(git for-each-ref --format='%(contents)' "refs/tags/${LATEST_TAG}" | grep -oP 'Version code:\s*\K[0-9]+' | head -n 1)
+            TAG_MESSAGE=$(git for-each-ref --format='%(contents)' "refs/tags/${LATEST_TAG}")
+            TAG_MOBILE_VERSION_CODE=$(printf '%s\n' "${TAG_MESSAGE}" | sed -n 's/.*Mobile version code: *\([0-9][0-9]*\).*/\1/p' | head -n 1)
+            TAG_WEAR_VERSION_CODE=$(printf '%s\n' "${TAG_MESSAGE}" | sed -n 's/.*Wear OS version code: *\([0-9][0-9]*\).*/\1/p' | head -n 1)
+            LEGACY_VERSION_CODE=$(printf '%s\n' "${TAG_MESSAGE}" | sed -n 's/.*Version code: *\([0-9][0-9]*\).*/\1/p' | head -n 1)
             if [[ "${TAG_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
               CURRENT_VERSION_NAME="${TAG_VERSION}"
             fi
-            if [[ "${TAG_VERSION_CODE}" =~ ^[1-9][0-9]*$ ]]; then
-              CURRENT_VERSION_CODE="${TAG_VERSION_CODE}"
+            if [[ "${TAG_MOBILE_VERSION_CODE}" =~ ^[1-9][0-9]*$ ]]; then
+              MOBILE_VERSION_CODE="${TAG_MOBILE_VERSION_CODE}"
+            elif [[ "${LEGACY_VERSION_CODE}" =~ ^[1-9][0-9]*$ ]]; then
+              MOBILE_VERSION_CODE="${LEGACY_VERSION_CODE}"
+            fi
+            if [[ "${TAG_WEAR_VERSION_CODE}" =~ ^[1-9][0-9]*$ ]]; then
+              WEAR_VERSION_CODE="${TAG_WEAR_VERSION_CODE}"
             fi
           fi
+          echo "Previous release: ${CURRENT_VERSION_NAME} (mobile ${MOBILE_VERSION_CODE}, Wear OS ${WEAR_VERSION_CODE})"
           if [[ ! "${CURRENT_VERSION_NAME}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
             echo "::error::Could not parse a stable semantic version."
             exit 1
@@ -66,21 +85,23 @@ jobs:
           MAJOR="${BASH_REMATCH[1]}"
           MINOR="${BASH_REMATCH[2]}"
           PATCH="${BASH_REMATCH[3]}"
-          if [[ ! "${CURRENT_VERSION_CODE}" =~ ^[1-9][0-9]*$ ]]; then
-            echo "::error::Could not parse a positive version code."
+          if [[ ! "${MOBILE_VERSION_CODE}" =~ ^[1-9][0-9]*$ || ! "${WEAR_VERSION_CODE}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::Could not parse positive mobile and Wear OS version codes."
             exit 1
           fi
           VERSION_NAME="${MAJOR}.${MINOR}.$((PATCH + 1))"
-          VERSION_CODE=$((CURRENT_VERSION_CODE + 1))
+          MOBILE_VERSION_CODE=$((MOBILE_VERSION_CODE + 1))
+          WEAR_VERSION_CODE=$((WEAR_VERSION_CODE + 1))
           TAG_NAME="v${VERSION_NAME}"
           if git ls-remote --exit-code --tags origin "refs/tags/${TAG_NAME}" >/dev/null 2>&1; then
             echo "::error::Tag ${TAG_NAME} already exists."
             exit 1
           fi
-          echo "Releasing ${CURRENT_VERSION_NAME} (${CURRENT_VERSION_CODE}) as ${VERSION_NAME} (${VERSION_CODE})."
+          echo "Releasing ${CURRENT_VERSION_NAME} as ${VERSION_NAME} (mobile ${MOBILE_VERSION_CODE}, Wear OS ${WEAR_VERSION_CODE})."
           {
             echo "VERSION_NAME=${VERSION_NAME}"
-            echo "VERSION_CODE=${VERSION_CODE}"
+            echo "MOBILE_VERSION_CODE=${MOBILE_VERSION_CODE}"
+            echo "WEAR_VERSION_CODE=${WEAR_VERSION_CODE}"
             echo "TAG_NAME=${TAG_NAME}"
           } >> "$GITHUB_ENV"
 
@@ -97,9 +118,13 @@ jobs:
           fi
           echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > "${RUNNER_TEMP}/haxtracker-release.keystore"
           export ANDROID_KEYSTORE_PATH="${RUNNER_TEMP}/haxtracker-release.keystore"
-          ./gradlew bundleRelease assembleRelease \
+          ./gradlew :mobile:bundleRelease :mobile:assembleRelease \
             -PversionName="${VERSION_NAME}" \
-            -PversionCode="${VERSION_CODE}" \
+            -PversionCode="${MOBILE_VERSION_CODE}" \
+            --stacktrace
+          ./gradlew :wear:bundleRelease :wear:assembleRelease \
+            -PversionName="${VERSION_NAME}" \
+            -PversionCode="${WEAR_VERSION_CODE}" \
             --stacktrace
 
       - name: Prepare Release Assets
@@ -110,13 +135,48 @@ jobs:
           cp mobile/build/outputs/apk/release/mobile-release.apk release-assets/haxtracker-mobile.apk
           cp wear/build/outputs/apk/release/wear-release.apk release-assets/haxtracker-wear.apk
 
-      - name: Tag release commit
+      - name: Persist release versions
         run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          version_name = "${VERSION_NAME}"
+          replacements = {
+              "mobile/build.gradle.kts": "${MOBILE_VERSION_CODE}",
+              "wear/build.gradle.kts": "${WEAR_VERSION_CODE}",
+          }
+          for filename, version_code in replacements.items():
+              path = Path(filename)
+              content = path.read_text()
+              content, name_count = re.subn(
+                  r'(versionName = providers\.gradleProperty\("versionName"\)\.getOrElse\(")[^"]+("\))',
+                  rf'\g<1>{version_name}\g<2>',
+                  content,
+              )
+              content, code_count = re.subn(
+                  r'(versionCode = providers\.gradleProperty\("versionCode"\)\.map\(String::toInt\)\.getOrElse\()[0-9]+(\))',
+                  rf'\g<1>{version_code}\g<2>',
+                  content,
+              )
+              if name_count != 1 or code_count != 1:
+                  raise SystemExit(f"Unexpected version format in {filename}")
+              path.write_text(content)
+          PY
+          git diff -- mobile/build.gradle.kts wear/build.gradle.kts
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git tag --annotate "${TAG_NAME}" "${GITHUB_SHA}" \
+          git add mobile/build.gradle.kts wear/build.gradle.kts
+          git commit --message "Release ${TAG_NAME} [skip ci]"
+          git push origin HEAD:main
+
+      - name: Tag release commit
+        run: |
+          RELEASE_SHA=$(git rev-parse HEAD)
+          git tag --annotate "${TAG_NAME}" "${RELEASE_SHA}" \
             --message "HaxTracker ${TAG_NAME}" \
-            --message "Version code: ${VERSION_CODE}"
+            --message "Mobile version code: ${MOBILE_VERSION_CODE}" \
+            --message "Wear OS version code: ${WEAR_VERSION_CODE}"
           git push origin "${TAG_NAME}"
 
       - name: Publish GitHub Release
