@@ -27,7 +27,9 @@ class WearSplashScreenComplianceTest {
             File(System.getProperty("user.dir"), "wear/$relativePath"),      // run from project root
         )
         return candidates.firstOrNull { it.exists() }
-            ?: fail("Could not locate $relativePath (tried ${candidates.map { it.absolutePath }})")
+            ?: throw AssertionError(
+                "Could not locate $relativePath (tried ${candidates.map { it.absolutePath }})"
+            )
     }
 
     private fun parseXml(file: File) =
@@ -303,4 +305,3 @@ class WearSplashScreenComplianceTest {
         )
     }
 }
-
