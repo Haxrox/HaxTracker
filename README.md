@@ -112,12 +112,18 @@ Workflows configuration: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) 
 
 ### Publishing a Release
 
-Releases are started manually from the `main` branch through the **Android CI**
-workflow. The workflow reads the current mobile `versionName` and
-`versionCode`, increments the patch version and code, then runs the full CI
+Releases are started manually from the `main` branch through the **Android
+Release** workflow. Choose `patch`, `minor`, or `major` in the
+`Version increment to apply` field. The workflow reads the current mobile
+`versionName` and `versionCode`, increments the selected version component and
+both form-factor version codes, then runs the full CI
 gate for the current `main` commit. It builds signed mobile and Wear OS
 AAB/APK artifacts, tags that commit, and creates a GitHub release with
 automatically generated notes linking the merged pull requests.
+
+For example, starting from `1.2.3`, choose `patch` for `1.2.4`, `minor` for
+`1.3.0`, or `major` for `2.0.0`. Version codes always increment for every
+release, regardless of the selected version-name increment.
 
 Mobile and Wear OS use separate monotonically increasing version codes while
 sharing the same version name. The attached AABs are intended for their

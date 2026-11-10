@@ -2,6 +2,16 @@ name: Android Release
 
 on:
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: Version increment to apply
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
 
 concurrency:
   group: android-release-main
@@ -44,6 +54,8 @@ jobs:
         run: chmod +x gradlew
 
       - name: Determine Next Release Version
+        env:
+          RELEASE_TYPE: ${{ inputs.release_type }}
         run: |
           git fetch --tags --force origin
           CURRENT_VERSION_NAME=$(sed -n 's/.*versionName = providers.gradleProperty("versionName").getOrElse("\([^"]*\)").*/\1/p' mobile/build.gradle.kts | head -n 1)
@@ -89,7 +101,25 @@ jobs:
             echo "::error::Could not parse positive mobile and Wear OS version codes."
             exit 1
           fi
-          VERSION_NAME="${MAJOR}.${MINOR}.$((PATCH + 1))"
+          case "${RELEASE_TYPE}" in
+            patch)
+              PATCH=$((PATCH + 1))
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            *)
+              echo "::error::Unsupported release type: ${RELEASE_TYPE}"
+              exit 1
+              ;;
+          esac
+          VERSION_NAME="${MAJOR}.${MINOR}.${PATCH}"
           MOBILE_VERSION_CODE=$((MOBILE_VERSION_CODE + 1))
           WEAR_VERSION_CODE=$((WEAR_VERSION_CODE + 1))
           TAG_NAME="v${VERSION_NAME}"
