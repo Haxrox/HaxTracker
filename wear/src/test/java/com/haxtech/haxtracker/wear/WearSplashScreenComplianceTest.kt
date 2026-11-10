@@ -33,7 +33,9 @@ class WearSplashScreenComplianceTest {
     }
 
     private fun parseXml(file: File) =
-        DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file)
+        DocumentBuilderFactory.newInstance().apply {
+            isNamespaceAware = true
+        }.newDocumentBuilder().parse(file)
 
     private fun File.readText(): String = readText(Charsets.UTF_8)
 
