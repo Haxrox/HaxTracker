@@ -107,7 +107,22 @@ To ensure maximum stability and reliability across every pull request and commit
 - 📱 **Mobile Multi-SDK Emulator Matrix**: Boots headless Android Virtual Devices (API 26, 30, 34) on `google_apis` x86_64, installs the mobile APK, launches `MainActivity`, verifies process stability, and archives launch screenshots.
 - ⌚ **Wear OS Smartwatch Emulator Matrix**: Boots Wear OS AVDs (API 30, 34) using `android-wear` x86_64 system images and the `wearos_small_round` profile, installs the wearable APK, launches Wear OS `MainActivity`, verifies smartwatch process stability, and captures round watch screenshots.
 
-Workflows configuration: [`.github/workflows/ci.yml`](.github/workflows/ci.yml)
+Workflows configuration: [`.github/workflows/ci.yml`](.github/workflows/ci.yml) and
+[`.github/workflows/release.yml`](.github/workflows/release.yml).
+
+### Publishing a Release
+
+Releases are started manually from the `main` branch through the **Android CI**
+workflow. The workflow reads the current mobile `versionName` and
+`versionCode`, increments the patch version and code, then runs the full CI
+gate for the current `main` commit. It builds signed mobile and Wear OS
+AAB/APK artifacts, tags that commit, and creates a GitHub release with
+automatically generated notes linking the merged pull requests.
+
+The repository must have these signing secrets configured before publishing:
+`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
+and `ANDROID_KEY_PASSWORD`. The AAB files attached to the release are the
+Google Play upload artifacts.
 
 ---
 

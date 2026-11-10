@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+val releaseKeystorePath = System.getenv("ANDROID_KEYSTORE_PATH")
+
 android {
     namespace = "com.haxtech.haxtracker.wear"
     compileSdk = 36
@@ -11,14 +13,27 @@ android {
         applicationId = "com.haxtech.haxtracker"
         minSdk = 30
         targetSdk = 36
-        versionCode = 20006
-        versionName = "1.0.2"
+        versionCode = providers.gradleProperty("versionCode").map(String::toInt).getOrElse(20006)
+        versionName = providers.gradleProperty("versionName").getOrElse("1.0.2")
     }
 
+    signingConfigs {
+        if (releaseKeystorePath != null) {
+            create("release") {
+                storeFile = file(releaseKeystorePath)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
             optimization {
                 enable = false
+            }
+            if (releaseKeystorePath != null) {
+                signingConfig = signingConfigs.getByName("release")
             }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
