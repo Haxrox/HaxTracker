@@ -5,7 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.wear.compose.material3.ColorScheme
 import androidx.wear.compose.material3.MaterialTheme
 
-val PitchBlack = Color(0xFF090A0F)
+val PitchBlack = Color(0xFF000000)
 val DarkSurface = Color(0xFF12141C)
 val DarkSurfaceElevated = Color(0xFF1E2230)
 val DarkBorder = Color(0xFF2A2F45)
