@@ -13,8 +13,8 @@ android {
         applicationId = "com.haxtech.haxtracker"
         minSdk = 30
         targetSdk = 36
-        versionCode = providers.gradleProperty("versionCode").map(String::toInt).getOrElse(20006)
-        versionName = providers.gradleProperty("versionName").getOrElse("1.0.2")
+        versionCode = providers.gradleProperty("versionCode").map(String::toInt).getOrElse(20007)
+        versionName = providers.gradleProperty("versionName").getOrElse("1.0.1")
     }
 
     signingConfigs {
