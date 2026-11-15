@@ -295,6 +295,36 @@ class WearSplashScreenComplianceTest {
     }
 
     @Test
+    fun mainActivity_splashScreenDurationIs3Seconds() {
+        val file = wearFile(
+            "src/main/java/com/haxtech/haxtracker/wear/presentation/MainActivity.kt"
+        )
+        val content = file.readText()
+
+        assertTrue(
+            "Splash screen must display for 3 seconds before moving to the main screen (delay(3000L))",
+            content.contains("delay(3000L)")
+        )
+    }
+
+    @Test
+    fun mainActivity_transitionsFromSplashToAppContent() {
+        val file = wearFile(
+            "src/main/java/com/haxtech/haxtracker/wear/presentation/MainActivity.kt"
+        )
+        val content = file.readText()
+
+        assertTrue(
+            "MainActivity must manage splash visibility state (showSplash)",
+            content.contains("showSplash")
+        )
+        assertTrue(
+            "MainActivity must transition from splash to main badminton screen using animated transition",
+            content.contains("SplashToMainTransition")
+        )
+    }
+
+    @Test
     fun theme_pitchBlackIsPureBlack() {
         val file = wearFile(
             "src/main/java/com/haxtech/haxtracker/wear/presentation/theme/Theme.kt"

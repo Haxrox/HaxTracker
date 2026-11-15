@@ -8,6 +8,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -22,6 +23,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -30,6 +32,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -48,6 +52,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+import androidx.wear.compose.foundation.rotary.RotaryScrollableDefaults
+import androidx.wear.compose.foundation.rotary.rotaryScrollable
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
@@ -169,149 +175,153 @@ fun WearApp() {
                 SplashScreen()
             } else {
                 AppScaffold {
-            ScreenScaffold { contentPadding ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(PitchBlack)
-                        .padding(contentPadding)
-                        .pointerInput(isFinished) {
-                            if (isFinished) return@pointerInput
-                            detectDragGestures(
-                                onDragStart = {
-                                    totalDragX = 0f
-                                    totalDragY = 0f
+                    when {
+                        showSettings -> {
+                            BackHandler { showSettings = false }
+                            SettingsDialog(
+                                currentConfig = matchState.config,
+                                onSelectConfig = { newConfig ->
+                                    handleAction(GameAction.ResetMatch(newConfig))
+                                    showSettings = false
                                 },
-                                onDragEnd = {
-                                    val minSwipeDistance = 30f
-                                    if (abs(totalDragY) > abs(totalDragX)) {
-                                        if (totalDragY < -minSwipeDistance) {
-                                            handleAction(GameAction.PointTeamA)
-                                            gestureFeedback = "+1 ${matchState.config.teamA.name}"
-                                        } else if (totalDragY > minSwipeDistance) {
-                                            handleAction(GameAction.PointTeamB)
-                                            gestureFeedback = "+1 ${matchState.config.teamB.name}"
-                                        }
-                                    } else {
-                                        if (totalDragX < -minSwipeDistance) {
-                                            if (matchState.canRedo()) {
-                                                handleAction(GameAction.Redo)
-                                                gestureFeedback = "⬅️ Point Redone"
+                                onOpenHelp = {
+                                    showSettings = false
+                                    showGestureHelp = true
+                                },
+                                onDismiss = { showSettings = false }
+                            )
+                        }
+                        showGestureHelp -> {
+                            BackHandler { showGestureHelp = false }
+                            GestureHelpDialog(
+                                teamAName = matchState.config.teamA.name,
+                                teamBName = matchState.config.teamB.name,
+                                onDismiss = { showGestureHelp = false }
+                            )
+                        }
+                        matchState.isMatchFinished -> {
+                            MatchFinishedDialog(
+                                matchState = matchState,
+                                onRestart = { handleAction(GameAction.ResetMatch()) }
+                            )
+                        }
+                        matchState.isGameFinished -> {
+                            GameFinishedDialog(
+                                matchState = matchState,
+                                onNextGame = { handleAction(GameAction.StartNextGame()) }
+                            )
+                        }
+                        else -> {
+                            ScreenScaffold { contentPadding ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(PitchBlack)
+                                        .padding(contentPadding)
+                                        .pointerInput(isFinished) {
+                                            if (isFinished) return@pointerInput
+                                            detectDragGestures(
+                                                onDragStart = {
+                                                    totalDragX = 0f
+                                                    totalDragY = 0f
+                                                },
+                                                onDragEnd = {
+                                                    val minSwipeDistance = 30f
+                                                    if (abs(totalDragY) > abs(totalDragX)) {
+                                                        if (totalDragY < -minSwipeDistance) {
+                                                            handleAction(GameAction.PointTeamA)
+                                                            gestureFeedback = "+1 ${matchState.config.teamA.name}"
+                                                        } else if (totalDragY > minSwipeDistance) {
+                                                            handleAction(GameAction.PointTeamB)
+                                                            gestureFeedback = "+1 ${matchState.config.teamB.name}"
+                                                        }
+                                                    } else {
+                                                        if (totalDragX < -minSwipeDistance) {
+                                                            if (matchState.canRedo()) {
+                                                                handleAction(GameAction.Redo)
+                                                                gestureFeedback = "⬅️ Point Redone"
+                                                            }
+                                                        } else if (totalDragX > minSwipeDistance) {
+                                                            if (matchState.canUndo()) {
+                                                                handleAction(GameAction.Undo)
+                                                                gestureFeedback = "➡️ Point Undone"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ) { change, dragAmount ->
+                                                change.consume()
+                                                totalDragX += dragAmount.x
+                                                totalDragY += dragAmount.y
                                             }
-                                        } else if (totalDragX > minSwipeDistance) {
-                                            if (matchState.canUndo()) {
-                                                handleAction(GameAction.Undo)
-                                                gestureFeedback = "➡️ Point Undone"
-                                            }
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        // 1. Header Bar: Status & Sport Title
+                                        HeaderSection(matchState = matchState)
+
+                                        // 2. Scoreboard Section
+                                        CompactScoreBoard(
+                                            matchState = matchState,
+                                            onAction = handleAction,
+                                            onGestureFeedback = { feedback -> gestureFeedback = feedback }
+                                        )
+
+                                        // 3. 2D Mini Court Section (Combined on the same screen)
+                                        MiniCourtSection(
+                                            matchState = matchState,
+                                            modifier = Modifier
+                                                .fillMaxWidth(0.92f)
+                                                .weight(1f)
+                                                .padding(vertical = 1.dp)
+                                        )
+
+                                        // 4. Footer Bar: Gesture Hints & Settings
+                                        GestureHintFooter(
+                                            onOpenSettings = { showSettings = true },
+                                            onNewMatch = { handleAction(GameAction.ResetMatch()) },
+                                            onSwitchSides = { handleAction(GameAction.SwitchSidesManual) }
+                                        )
+                                    }
+
+                                    // Gesture Toast Feedback Overlay
+                                    AnimatedVisibility(
+                                        visible = gestureFeedback != null,
+                                        enter = fadeIn() + scaleIn(),
+                                        exit = fadeOut() + scaleOut(),
+                                        modifier = Modifier
+                                            .align(Alignment.TopCenter)
+                                            .padding(top = 16.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(14.dp))
+                                                .background(VoltGreen.copy(alpha = 0.95f))
+                                                .padding(horizontal = 10.dp, vertical = 3.dp)
+                                        ) {
+                                            Text(
+                                                text = gestureFeedback ?: "",
+                                                color = PitchBlack,
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.ExtraBold
+                                            )
                                         }
                                     }
                                 }
-                            ) { change, dragAmount ->
-                                change.consume()
-                                totalDragX += dragAmount.x
-                                totalDragY += dragAmount.y
                             }
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 10.dp, vertical = 2.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        // 1. Header Bar: Status & Sport Title
-                        HeaderSection(matchState = matchState)
-
-                        // 2. Scoreboard Section
-                        CompactScoreBoard(
-                            matchState = matchState,
-                            onAction = handleAction,
-                            onGestureFeedback = { feedback -> gestureFeedback = feedback }
-                        )
-
-                        // 3. 2D Mini Court Section (Combined on the same screen)
-                        MiniCourtSection(
-                            matchState = matchState,
-                            modifier = Modifier
-                                .fillMaxWidth(0.92f)
-                                .weight(1f)
-                                .padding(vertical = 1.dp)
-                        )
-
-                        // 4. Footer Bar: Gesture Hints & Settings
-                        GestureHintFooter(
-                            onOpenSettings = { showSettings = true },
-                            onNewMatch = { handleAction(GameAction.ResetMatch()) },
-                            onSwitchSides = { handleAction(GameAction.SwitchSidesManual) }
-                        )
-                    }
-
-                    // Gesture Toast Feedback Overlay
-                    AnimatedVisibility(
-                        visible = gestureFeedback != null,
-                        enter = fadeIn() + scaleIn(),
-                        exit = fadeOut() + scaleOut(),
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 20.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(VoltGreen.copy(alpha = 0.95f))
-                                .padding(horizontal = 10.dp, vertical = 3.dp)
-                        ) {
-                            Text(
-                                text = gestureFeedback ?: "",
-                                color = PitchBlack,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
                         }
-                    }
-
-                    // Modals
-                    if (matchState.isGameFinished && !matchState.isMatchFinished) {
-                        GameFinishedCard(
-                            matchState = matchState,
-                            onNextGame = { handleAction(GameAction.StartNextGame()) }
-                        )
-                    }
-
-                    if (matchState.isMatchFinished) {
-                        MatchFinishedCard(
-                            matchState = matchState,
-                            onRestart = { handleAction(GameAction.ResetMatch()) }
-                        )
-                    }
-
-                    if (showGestureHelp) {
-                        GestureHelpDialog(
-                            teamAName = matchState.config.teamA.name,
-                            teamBName = matchState.config.teamB.name,
-                            onDismiss = { showGestureHelp = false }
-                        )
-                    }
-
-                    if (showSettings) {
-                        SettingsDialog(
-                            currentConfig = matchState.config,
-                            onSelectConfig = { newConfig ->
-                                handleAction(GameAction.ResetMatch(newConfig))
-                                showSettings = false
-                            },
-                            onOpenHelp = { showGestureHelp = true },
-                            onDismiss = { showSettings = false }
-                        )
                     }
                 }
             }
         }
     }
-}
-}
 }
 
 @Composable
@@ -361,7 +371,7 @@ private fun CompactScoreBoard(
 
     Row(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth(0.92f)
             .clip(RoundedCornerShape(12.dp))
             .background(DarkSurface)
             .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
@@ -581,7 +591,7 @@ private fun GestureHintFooter(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 2.dp),
+            .padding(bottom = 6.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -630,39 +640,102 @@ private fun GestureHelpDialog(
     teamBName: String,
     onDismiss: () -> Unit
 ) {
+    val listState = rememberScalingLazyListState()
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    ScreenScaffold(
+        scrollState = listState
+    ) { contentPadding ->
+        ScalingLazyColumn(
+            state = listState,
+            contentPadding = contentPadding,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(PitchBlack)
+                .rotaryScrollable(
+                    behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
+                    focusRequester = focusRequester
+                )
+                .focusRequester(focusRequester)
+                .focusable()
+        ) {
+            item {
+                Text(
+                    text = "🖐 GESTURES",
+                    color = VoltCyan,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
+
+            item {
+                GestureHelpItem(
+                    action = "Swipe UP / Tap Left",
+                    result = "+1 $teamAName"
+                )
+            }
+
+            item {
+                GestureHelpItem(
+                    action = "Swipe DOWN / Tap Right",
+                    result = "+1 $teamBName"
+                )
+            }
+
+            item {
+                GestureHelpItem(
+                    action = "Swipe RIGHT",
+                    result = "Undo Point"
+                )
+            }
+
+            item {
+                GestureHelpItem(
+                    action = "Swipe LEFT",
+                    result = "Redo Point"
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(containerColor = VoltCyan, contentColor = PitchBlack),
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .height(32.dp)
+                ) {
+                    Text("GOT IT", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GestureHelpItem(
+    action: String,
+    result: String
+) {
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .background(PitchBlack.copy(alpha = 0.92f))
-            .clickable(onClick = onDismiss)
-            .padding(10.dp),
+            .fillMaxWidth(0.88f)
+            .padding(vertical = 2.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(DarkSurfaceElevated)
+            .border(1.dp, DarkBorder, RoundedCornerShape(14.dp))
+            .padding(vertical = 6.dp, horizontal = 10.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(DarkSurface)
-                .border(1.dp, VoltCyan, RoundedCornerShape(14.dp))
-                .padding(10.dp)
-        ) {
-            Text("🖐 GESTURES", color = VoltCyan, fontSize = 10.sp, fontWeight = FontWeight.Black)
-
-            Text("⬆️ Swipe UP / Tap Left: +1 $teamAName", color = TextPrimary, fontSize = 9.sp)
-            Text("⬇️ Swipe DOWN / Tap Right: +1 $teamBName", color = TextPrimary, fontSize = 9.sp)
-            Text("➡️ Swipe RIGHT: Undo Point", color = TextPrimary, fontSize = 9.sp)
-            Text("⬅️ Swipe LEFT: Redo Point", color = TextPrimary, fontSize = 9.sp)
-
-            Spacer(modifier = Modifier.height(2.dp))
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = VoltCyan, contentColor = PitchBlack),
-                modifier = Modifier.height(26.dp)
-            ) {
-                Text("GOT IT", fontSize = 9.sp, fontWeight = FontWeight.Bold)
-            }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(action, color = TextSecondary, fontSize = 8.5.sp, textAlign = TextAlign.Center)
+            Text(result, color = TextPrimary, fontSize = 9.5.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
         }
     }
 }
@@ -674,29 +747,38 @@ private fun SettingsDialog(
     onOpenHelp: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PitchBlack.copy(alpha = 0.94f))
-            .clickable(onClick = onDismiss)
-            .padding(8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        val listState = rememberScalingLazyListState()
+    val listState = rememberScalingLazyListState()
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    ScreenScaffold(
+        scrollState = listState
+    ) { contentPadding ->
         ScalingLazyColumn(
             state = listState,
+            contentPadding = contentPadding,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(DarkSurface)
-                .border(1.dp, VoltGold, RoundedCornerShape(14.dp))
-                .padding(horizontal = 8.dp)
+                .fillMaxSize()
+                .background(PitchBlack)
+                .rotaryScrollable(
+                    behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
+                    focusRequester = focusRequester
+                )
+                .focusRequester(focusRequester)
+                .focusable()
         ) {
             item {
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("⚙ MATCH OPTIONS", color = VoltGold, fontSize = 10.sp, fontWeight = FontWeight.Black)
-                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "⚙ MATCH OPTIONS",
+                    color = VoltGold,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
             }
 
             item {
@@ -743,14 +825,16 @@ private fun SettingsDialog(
             }
 
             item {
+                Spacer(modifier = Modifier.height(4.dp))
                 Button(
                     onClick = onDismiss,
                     colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceElevated, contentColor = TextPrimary),
-                    modifier = Modifier.height(22.dp)
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .height(32.dp)
                 ) {
-                    Text("Close", fontSize = 8.sp)
+                    Text("Close", fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
                 }
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
@@ -764,119 +848,204 @@ private fun ConfigOptionButton(
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
+            .fillMaxWidth(0.88f)
+            .padding(vertical = 2.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(if (isSelected) VoltGreen.copy(alpha = 0.2f) else DarkSurfaceElevated)
             .border(
                 1.dp,
                 if (isSelected) VoltGreen else Color.Transparent,
-                RoundedCornerShape(6.dp)
+                RoundedCornerShape(16.dp)
             )
             .clickable(onClick = onClick)
-            .padding(vertical = 3.dp, horizontal = 4.dp),
+            .padding(vertical = 7.dp, horizontal = 12.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = label,
             color = if (isSelected) VoltGreen else TextPrimary,
-            fontSize = 8.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+            fontSize = 10.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+            textAlign = TextAlign.Center
         )
     }
 }
 
 @Composable
-private fun GameFinishedCard(
+private fun GameFinishedDialog(
     matchState: MatchState,
     onNextGame: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PitchBlack.copy(alpha = 0.9f))
-            .padding(10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
+    val listState = rememberScalingLazyListState()
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    ScreenScaffold(
+        scrollState = listState
+    ) { contentPadding ->
+        ScalingLazyColumn(
+            state = listState,
+            contentPadding = contentPadding,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(DarkSurface)
-                .border(1.dp, VoltGreen, RoundedCornerShape(14.dp))
-                .padding(10.dp)
+                .fillMaxSize()
+                .background(PitchBlack)
+                .rotaryScrollable(
+                    behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
+                    focusRequester = focusRequester
+                )
+                .focusRequester(focusRequester)
+                .focusable()
         ) {
-            Text("🏸 GAME OVER", color = VoltGreen, fontSize = 11.sp, fontWeight = FontWeight.Black)
-            Spacer(modifier = Modifier.height(3.dp))
+            item {
+                Text(
+                    text = "🏸 GAME OVER",
+                    color = VoltGreen,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
 
-            val winnerName = if (matchState.gameWinner == TeamSide.TEAM_A) matchState.config.teamA.name else matchState.config.teamB.name
-            Text(
-                text = "$winnerName Wins Game ${matchState.currentGameIndex + 1}!",
-                color = TextPrimary,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
+            item {
+                val winnerName = if (matchState.gameWinner == TeamSide.TEAM_A) matchState.config.teamA.name else matchState.config.teamB.name
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.88f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(DarkSurfaceElevated)
+                        .border(1.dp, VoltGreen.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                        .padding(vertical = 8.dp, horizontal = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "$winnerName Wins!",
+                            color = VoltGreen,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Game ${matchState.currentGameIndex + 1} Complete",
+                            color = TextSecondary,
+                            fontSize = 9.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Button(
-                onClick = onNextGame,
-                colors = ButtonDefaults.buttonColors(containerColor = VoltGreen, contentColor = PitchBlack),
-                modifier = Modifier.fillMaxWidth().height(28.dp)
-            ) {
-                Text("Start Game ${matchState.currentGameIndex + 2}", fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            item {
+                Spacer(modifier = Modifier.height(6.dp))
+                Button(
+                    onClick = onNextGame,
+                    colors = ButtonDefaults.buttonColors(containerColor = VoltGreen, contentColor = PitchBlack),
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .height(34.dp)
+                ) {
+                    Text(
+                        text = "Start Game ${matchState.currentGameIndex + 2}",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun MatchFinishedCard(
+private fun MatchFinishedDialog(
     matchState: MatchState,
     onRestart: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PitchBlack.copy(alpha = 0.9f))
-            .padding(10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
+    val listState = rememberScalingLazyListState()
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    ScreenScaffold(
+        scrollState = listState
+    ) { contentPadding ->
+        ScalingLazyColumn(
+            state = listState,
+            contentPadding = contentPadding,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(14.dp))
-                .background(DarkSurface)
-                .border(1.dp, VoltGold, RoundedCornerShape(14.dp))
-                .padding(10.dp)
+                .fillMaxSize()
+                .background(PitchBlack)
+                .rotaryScrollable(
+                    behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
+                    focusRequester = focusRequester
+                )
+                .focusRequester(focusRequester)
+                .focusable()
         ) {
-            Text("🏆 MATCH OVER", color = VoltGold, fontSize = 11.sp, fontWeight = FontWeight.Black)
-            Spacer(modifier = Modifier.height(3.dp))
+            item {
+                Text(
+                    text = "🏆 MATCH OVER",
+                    color = VoltGold,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier.padding(bottom = 4.dp)
+                )
+            }
 
-            val winnerName = if (matchState.matchWinner == TeamSide.TEAM_A) matchState.config.teamA.name else matchState.config.teamB.name
-            Text(
-                text = "$winnerName Wins Match!",
-                color = TextPrimary,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "${matchState.scoreTeamA} - ${matchState.scoreTeamB}",
-                color = TextSecondary,
-                fontSize = 10.sp
-            )
+            item {
+                val winnerName = if (matchState.matchWinner == TeamSide.TEAM_A) matchState.config.teamA.name else matchState.config.teamB.name
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.88f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(DarkSurfaceElevated)
+                        .border(1.dp, VoltGold.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                        .padding(vertical = 8.dp, horizontal = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "$winnerName Wins Match!",
+                            color = VoltGold,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "${matchState.scoreTeamA} - ${matchState.scoreTeamB}",
+                            color = TextPrimary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontFamily = FontFamily.Monospace,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Button(
-                onClick = onRestart,
-                colors = ButtonDefaults.buttonColors(containerColor = VoltGreen, contentColor = PitchBlack),
-                modifier = Modifier.fillMaxWidth().height(28.dp)
-            ) {
-                Text("Play Again", fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            item {
+                Spacer(modifier = Modifier.height(6.dp))
+                Button(
+                    onClick = onRestart,
+                    colors = ButtonDefaults.buttonColors(containerColor = VoltGreen, contentColor = PitchBlack),
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .height(34.dp)
+                ) {
+                    Text(
+                        text = "Play Again",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
@@ -886,6 +1055,71 @@ private fun MatchFinishedCard(
 @Composable
 fun DefaultPreview() {
     WearApp()
+}
+
+@WearPreviewDevices
+@Composable
+fun SettingsPreview() {
+    HaxTrackerTheme {
+        AppScaffold {
+            SettingsDialog(
+                currentConfig = MatchConfig.defaultBadmintonDoubles(),
+                onSelectConfig = {},
+                onOpenHelp = {},
+                onDismiss = {}
+            )
+        }
+    }
+}
+
+@WearPreviewDevices
+@Composable
+fun GestureHelpPreview() {
+    HaxTrackerTheme {
+        AppScaffold {
+            GestureHelpDialog(
+                teamAName = "Team Alpha",
+                teamBName = "Team Beta",
+                onDismiss = {}
+            )
+        }
+    }
+}
+
+@WearPreviewDevices
+@Composable
+fun GameFinishedPreview() {
+    val base = GameEngine.newMatch(MatchConfig.defaultBadmintonDoubles())
+    HaxTrackerTheme {
+        AppScaffold {
+            GameFinishedDialog(
+                matchState = base.copy(
+                    isGameFinished = true,
+                    gameWinner = TeamSide.TEAM_A
+                ),
+                onNextGame = {}
+            )
+        }
+    }
+}
+
+@WearPreviewDevices
+@Composable
+fun MatchFinishedPreview() {
+    val base = GameEngine.newMatch(MatchConfig.defaultBadmintonDoubles())
+    HaxTrackerTheme {
+        AppScaffold {
+            MatchFinishedDialog(
+                matchState = base.copy(
+                    isMatchFinished = true,
+                    matchWinner = TeamSide.TEAM_A,
+                    scoreTeamA = 21,
+                    scoreTeamB = 18
+                ),
+                onRestart = {}
+            )
+        }
+    }
 }
 
 @Composable
