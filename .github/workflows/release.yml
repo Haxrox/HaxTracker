@@ -17,21 +17,28 @@ concurrency:
   group: android-release-main
   cancel-in-progress: false
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
+  ci:
+    name: Verify main CI
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
   release:
     name: Build, Tag, and Publish Release
     runs-on: ubuntu-latest
+    needs: ci
+    permissions:
+      contents: write
+      pull-requests: write
+    if: ${{ needs.ci.result == 'success' }}
 
     steps:
       - name: Checkout main
         uses: actions/checkout@v7
         with:
           token: ${{ secrets.RELEASE_PAT }}
-          ref: main
+          ref: ${{ github.ref_name }}
           fetch-depth: 0
 
       - name: Set up JDK 17
@@ -162,4 +169,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PAT }}
           TAG_NAME: ${{ env.TAG_NAME }}
-        run: gh release create "${TAG_NAME}" release-assets/* --generate-notes --title "${TAG_NAME}"
+        run: gh release create "${TAG_NAME}" release-assets/* --generate-notes --title "HaxTracker ${TAG_NAME}"
