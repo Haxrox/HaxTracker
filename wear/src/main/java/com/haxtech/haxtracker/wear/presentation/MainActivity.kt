@@ -46,6 +46,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -472,7 +473,8 @@ private fun TeamScoreBox(
                     color = accentColor,
                     fontSize = 7.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    maxLines = 1
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         } else {
@@ -494,6 +496,7 @@ private fun TeamScoreBox(
             fontSize = 6.5.sp,
             fontWeight = FontWeight.Bold,
             maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             textAlign = TextAlign.Center
         )
     }
@@ -581,7 +584,8 @@ private fun MiniPlayerBadge(
             fontSize = 6.sp,
             color = if (isServer) VoltGold else TextPrimary,
             fontWeight = if (isServer) FontWeight.Bold else FontWeight.Normal,
-            maxLines = 1
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
@@ -601,39 +605,57 @@ private fun GestureHintFooter(
     ) {
         Box(
             modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(DarkSurfaceElevated)
+                .size(36.dp)
                 .clickable(onClick = onNewMatch),
             contentAlignment = Alignment.Center
         ) {
-            Text("+", color = VoltGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurfaceElevated),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("+", color = VoltGreen, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
         }
-        
-        Spacer(modifier = Modifier.width(10.dp))
+
+        Spacer(modifier = Modifier.width(6.dp))
 
         Box(
             modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(DarkSurfaceElevated)
+                .size(36.dp)
                 .clickable(onClick = onSwitchSides),
             contentAlignment = Alignment.Center
         ) {
-            Text("⇄", color = VoltCyan, fontSize = 12.sp, fontWeight = FontWeight.Black)
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurfaceElevated),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("⇄", color = VoltCyan, fontSize = 12.sp, fontWeight = FontWeight.Black)
+            }
         }
 
-        Spacer(modifier = Modifier.width(10.dp))
+        Spacer(modifier = Modifier.width(6.dp))
 
         Box(
             modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(DarkSurfaceElevated)
+                .size(36.dp)
                 .clickable(onClick = onOpenSettings),
             contentAlignment = Alignment.Center
         ) {
-            Text("⚙", color = VoltCyan, fontSize = 12.sp)
+            Box(
+                modifier = Modifier
+                    .size(26.dp)
+                    .clip(CircleShape)
+                    .background(DarkSurfaceElevated),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("⚙", color = VoltCyan, fontSize = 12.sp)
+            }
         }
     }
 }
@@ -1141,7 +1163,7 @@ fun DefaultPreview() {
 @Composable
 fun SettingsPreview() {
     HaxTrackerTheme {
-        AppScaffold {
+        AppScaffold(containerColor = PitchBlack) {
             SettingsDialog(
                 currentConfig = MatchConfig.defaultBadmintonDoubles(),
                 onSelectConfig = {},
@@ -1156,7 +1178,7 @@ fun SettingsPreview() {
 @Composable
 fun GestureHelpPreview() {
     HaxTrackerTheme {
-        AppScaffold {
+        AppScaffold(containerColor = PitchBlack) {
             GestureHelpDialog(
                 teamAName = "Team Alpha",
                 teamBName = "Team Beta",
@@ -1171,7 +1193,7 @@ fun GestureHelpPreview() {
 fun GameFinishedPreview() {
     val base = GameEngine.newMatch(MatchConfig.defaultBadmintonDoubles())
     HaxTrackerTheme {
-        AppScaffold {
+        AppScaffold(containerColor = PitchBlack) {
             GameFinishedDialog(
                 matchState = base.copy(
                     isGameFinished = true,
@@ -1188,7 +1210,7 @@ fun GameFinishedPreview() {
 fun MatchFinishedPreview() {
     val base = GameEngine.newMatch(MatchConfig.defaultBadmintonDoubles())
     HaxTrackerTheme {
-        AppScaffold {
+        AppScaffold(containerColor = PitchBlack) {
             MatchFinishedDialog(
                 matchState = base.copy(
                     isMatchFinished = true,
