@@ -108,6 +108,18 @@ class WearBlackBackgroundComplianceTest {
             themeSource.contains("background = PitchBlack")
         )
         assertTrue(
+            "ColorScheme must use PitchBlack for surfaceContainerLow",
+            themeSource.contains("surfaceContainerLow = PitchBlack")
+        )
+        assertTrue(
+            "ColorScheme must use PitchBlack for surfaceContainer",
+            themeSource.contains("surfaceContainer = PitchBlack")
+        )
+        assertTrue(
+            "ColorScheme must use PitchBlack for surfaceContainerHigh",
+            themeSource.contains("surfaceContainerHigh = PitchBlack")
+        )
+        assertTrue(
             "ColorScheme must use PitchBlack for onPrimary (high-contrast text on volt green)",
             themeSource.contains("onPrimary = PitchBlack")
         )
@@ -219,6 +231,17 @@ class WearBlackBackgroundComplianceTest {
     }
 
     // ── 4. Composable Screens and Root Containers in MainActivity.kt ───────
+
+    @Test
+    fun mainActivity_appScaffold_usesExplicitPitchBlackContainerColor() {
+        val source = loadMainActivitySource()
+        val wearAppBody = source.substringAfter("fun WearApp()").substringBefore("fun HeaderSection")
+
+        assertTrue(
+            "AppScaffold must explicitly set containerColor = PitchBlack for OLED bezel blending",
+            wearAppBody.contains("AppScaffold(") && wearAppBody.contains("containerColor = PitchBlack")
+        )
+    }
 
     @Test
     fun mainActivity_mainMatchScreen_rootBoxUsesPitchBlackBeforePadding() {

@@ -58,6 +58,8 @@ import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ScreenScaffold
+import androidx.wear.compose.material3.ScrollIndicator
+import androidx.wear.compose.material3.ScrollIndicatorDefaults
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
 import com.haxtech.haxtracker.core.engine.CourtPositionCalculator
@@ -174,7 +176,9 @@ fun WearApp() {
             if (isSplash) {
                 SplashScreen()
             } else {
-                AppScaffold {
+                AppScaffold(
+                    containerColor = PitchBlack
+                ) {
                     when {
                         showSettings -> {
                             BackHandler { showSettings = false }
@@ -278,7 +282,7 @@ fun WearApp() {
                                         MiniCourtSection(
                                             matchState = matchState,
                                             modifier = Modifier
-                                                .fillMaxWidth(0.92f)
+                                                .fillMaxWidth(0.88f)
                                                 .weight(1f)
                                                 .padding(vertical = 1.dp)
                                         )
@@ -371,7 +375,7 @@ private fun CompactScoreBoard(
 
     Row(
         modifier = Modifier
-            .fillMaxWidth(0.92f)
+            .fillMaxWidth(0.88f)
             .clip(RoundedCornerShape(12.dp))
             .background(DarkSurface)
             .border(1.dp, DarkBorder, RoundedCornerShape(12.dp))
@@ -591,7 +595,7 @@ private fun GestureHintFooter(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 6.dp),
+            .padding(bottom = 8.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -648,72 +652,91 @@ private fun GestureHelpDialog(
     }
 
     ScreenScaffold(
-        scrollState = listState
+        scrollState = listState,
+        scrollIndicator = null
     ) { contentPadding ->
-        ScalingLazyColumn(
-            state = listState,
-            contentPadding = contentPadding,
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(PitchBlack)
-                .rotaryScrollable(
-                    behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
-                    focusRequester = focusRequester
-                )
-                .focusRequester(focusRequester)
-                .focusable()
         ) {
-            item {
-                Text(
-                    text = "🖐 GESTURES",
-                    color = VoltCyan,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-            }
+            ScalingLazyColumn(
+                state = listState,
+                contentPadding = contentPadding,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .rotaryScrollable(
+                        behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
+                        focusRequester = focusRequester
+                    )
+                    .focusRequester(focusRequester)
+                    .focusable()
+            ) {
+                item {
+                    Text(
+                        text = "🖐 GESTURES",
+                        color = VoltCyan,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
 
-            item {
-                GestureHelpItem(
-                    action = "Swipe UP / Tap Left",
-                    result = "+1 $teamAName"
-                )
-            }
+                item {
+                    GestureHelpItem(
+                        action = "Swipe UP / Tap Left",
+                        result = "+1 $teamAName"
+                    )
+                }
 
-            item {
-                GestureHelpItem(
-                    action = "Swipe DOWN / Tap Right",
-                    result = "+1 $teamBName"
-                )
-            }
+                item {
+                    GestureHelpItem(
+                        action = "Swipe DOWN / Tap Right",
+                        result = "+1 $teamBName"
+                    )
+                }
 
-            item {
-                GestureHelpItem(
-                    action = "Swipe RIGHT",
-                    result = "Undo Point"
-                )
-            }
+                item {
+                    GestureHelpItem(
+                        action = "Swipe RIGHT",
+                        result = "Undo Point"
+                    )
+                }
 
-            item {
-                GestureHelpItem(
-                    action = "Swipe LEFT",
-                    result = "Redo Point"
-                )
-            }
+                item {
+                    GestureHelpItem(
+                        action = "Swipe LEFT",
+                        result = "Redo Point"
+                    )
+                }
 
-            item {
-                Spacer(modifier = Modifier.height(4.dp))
-                Button(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = VoltCyan, contentColor = PitchBlack),
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .height(32.dp)
-                ) {
-                    Text("GOT IT", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                item {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(containerColor = VoltCyan, contentColor = PitchBlack),
+                        modifier = Modifier
+                            .fillMaxWidth(0.75f)
+                            .height(32.dp)
+                    ) {
+                        Text("GOT IT", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
+
+            ScrollIndicator(
+                state = listState,
+                colors = ScrollIndicatorDefaults.colors(
+                    indicatorColor = VoltCyan,
+                    trackColor = DarkBorder
+                ),
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
         }
     }
 }
@@ -725,7 +748,7 @@ private fun GestureHelpItem(
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth(0.88f)
+            .fillMaxWidth(0.85f)
             .padding(vertical = 2.dp)
             .clip(RoundedCornerShape(14.dp))
             .background(DarkSurfaceElevated)
@@ -755,87 +778,106 @@ private fun SettingsDialog(
     }
 
     ScreenScaffold(
-        scrollState = listState
+        scrollState = listState,
+        scrollIndicator = null
     ) { contentPadding ->
-        ScalingLazyColumn(
-            state = listState,
-            contentPadding = contentPadding,
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(PitchBlack)
-                .rotaryScrollable(
-                    behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
-                    focusRequester = focusRequester
-                )
-                .focusRequester(focusRequester)
-                .focusable()
         ) {
-            item {
-                Text(
-                    text = "⚙ MATCH OPTIONS",
-                    color = VoltGold,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-            }
+            ScalingLazyColumn(
+                state = listState,
+                contentPadding = contentPadding,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .rotaryScrollable(
+                        behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
+                        focusRequester = focusRequester
+                    )
+                    .focusRequester(focusRequester)
+                    .focusable()
+            ) {
+                item {
+                    Text(
+                        text = "⚙ MATCH OPTIONS",
+                        color = VoltGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
 
-            item {
-                ConfigOptionButton(
-                    label = "🖐 Gesture Guide",
-                    isSelected = false,
-                    onClick = {
-                        onDismiss()
-                        onOpenHelp()
+                item {
+                    ConfigOptionButton(
+                        label = "🖐 Gesture Guide",
+                        isSelected = false,
+                        onClick = {
+                            onDismiss()
+                            onOpenHelp()
+                        }
+                    )
+                }
+
+                item {
+                    ConfigOptionButton(
+                        label = "🏸 Badminton Doubles",
+                        isSelected = (currentConfig.sport == Sport.BADMINTON && currentConfig.format == MatchFormat.DOUBLES),
+                        onClick = { onSelectConfig(MatchConfig.defaultBadmintonDoubles()) }
+                    )
+                }
+
+                item {
+                    ConfigOptionButton(
+                        label = "🏸 Badminton Singles",
+                        isSelected = (currentConfig.sport == Sport.BADMINTON && currentConfig.format == MatchFormat.SINGLES),
+                        onClick = { onSelectConfig(MatchConfig.defaultBadmintonSingles()) }
+                    )
+                }
+
+                item {
+                    ConfigOptionButton(
+                        label = "🎾 Pickleball Doubles",
+                        isSelected = (currentConfig.sport == Sport.PICKLEBALL && currentConfig.format == MatchFormat.DOUBLES),
+                        onClick = { onSelectConfig(MatchConfig.defaultPickleballDoubles()) }
+                    )
+                }
+
+                item {
+                    ConfigOptionButton(
+                        label = "🎾 Pickleball Singles",
+                        isSelected = (currentConfig.sport == Sport.PICKLEBALL && currentConfig.format == MatchFormat.SINGLES),
+                        onClick = { onSelectConfig(MatchConfig.defaultPickleballSingles()) }
+                    )
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = onDismiss,
+                        colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceElevated, contentColor = TextPrimary),
+                        modifier = Modifier
+                            .fillMaxWidth(0.75f)
+                            .height(32.dp)
+                    ) {
+                        Text("Close", fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
                     }
-                )
-            }
+                }
 
-            item {
-                ConfigOptionButton(
-                    label = "🏸 Badminton Doubles",
-                    isSelected = (currentConfig.sport == Sport.BADMINTON && currentConfig.format == MatchFormat.DOUBLES),
-                    onClick = { onSelectConfig(MatchConfig.defaultBadmintonDoubles()) }
-                )
-            }
-
-            item {
-                ConfigOptionButton(
-                    label = "🏸 Badminton Singles",
-                    isSelected = (currentConfig.sport == Sport.BADMINTON && currentConfig.format == MatchFormat.SINGLES),
-                    onClick = { onSelectConfig(MatchConfig.defaultBadmintonSingles()) }
-                )
-            }
-
-            item {
-                ConfigOptionButton(
-                    label = "🎾 Pickleball Doubles",
-                    isSelected = (currentConfig.sport == Sport.PICKLEBALL && currentConfig.format == MatchFormat.DOUBLES),
-                    onClick = { onSelectConfig(MatchConfig.defaultPickleballDoubles()) }
-                )
-            }
-
-            item {
-                ConfigOptionButton(
-                    label = "🎾 Pickleball Singles",
-                    isSelected = (currentConfig.sport == Sport.PICKLEBALL && currentConfig.format == MatchFormat.SINGLES),
-                    onClick = { onSelectConfig(MatchConfig.defaultPickleballSingles()) }
-                )
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(4.dp))
-                Button(
-                    onClick = onDismiss,
-                    colors = ButtonDefaults.buttonColors(containerColor = DarkSurfaceElevated, contentColor = TextPrimary),
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .height(32.dp)
-                ) {
-                    Text("Close", fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                item {
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
+
+            ScrollIndicator(
+                state = listState,
+                colors = ScrollIndicatorDefaults.colors(
+                    indicatorColor = VoltCyan,
+                    trackColor = DarkBorder
+                ),
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
         }
     }
 }
@@ -848,7 +890,7 @@ private fun ConfigOptionButton(
 ) {
     Box(
         modifier = Modifier
-            .fillMaxWidth(0.88f)
+            .fillMaxWidth(0.85f)
             .padding(vertical = 2.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(if (isSelected) VoltGreen.copy(alpha = 0.2f) else DarkSurfaceElevated)
@@ -858,7 +900,7 @@ private fun ConfigOptionButton(
                 RoundedCornerShape(16.dp)
             )
             .clickable(onClick = onClick)
-            .padding(vertical = 7.dp, horizontal = 12.dp),
+            .padding(vertical = 7.dp, horizontal = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
@@ -884,78 +926,97 @@ private fun GameFinishedDialog(
     }
 
     ScreenScaffold(
-        scrollState = listState
+        scrollState = listState,
+        scrollIndicator = null
     ) { contentPadding ->
-        ScalingLazyColumn(
-            state = listState,
-            contentPadding = contentPadding,
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(PitchBlack)
-                .rotaryScrollable(
-                    behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
-                    focusRequester = focusRequester
-                )
-                .focusRequester(focusRequester)
-                .focusable()
         ) {
-            item {
-                Text(
-                    text = "🏸 GAME OVER",
-                    color = VoltGreen,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-            }
+            ScalingLazyColumn(
+                state = listState,
+                contentPadding = contentPadding,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .rotaryScrollable(
+                        behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
+                        focusRequester = focusRequester
+                    )
+                    .focusRequester(focusRequester)
+                    .focusable()
+            ) {
+                item {
+                    Text(
+                        text = "🏸 GAME OVER",
+                        color = VoltGreen,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
 
-            item {
-                val winnerName = if (matchState.gameWinner == TeamSide.TEAM_A) matchState.config.teamA.name else matchState.config.teamB.name
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.88f)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(DarkSurfaceElevated)
-                        .border(1.dp, VoltGreen.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
-                        .padding(vertical = 8.dp, horizontal = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                item {
+                    val winnerName = if (matchState.gameWinner == TeamSide.TEAM_A) matchState.config.teamA.name else matchState.config.teamB.name
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(DarkSurfaceElevated)
+                            .border(1.dp, VoltGreen.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                            .padding(vertical = 8.dp, horizontal = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "$winnerName Wins!",
+                                color = VoltGreen,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Game ${matchState.currentGameIndex + 1} Complete",
+                                color = TextSecondary,
+                                fontSize = 9.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Button(
+                        onClick = onNextGame,
+                        colors = ButtonDefaults.buttonColors(containerColor = VoltGreen, contentColor = PitchBlack),
+                        modifier = Modifier
+                            .fillMaxWidth(0.75f)
+                            .height(34.dp)
+                    ) {
                         Text(
-                            text = "$winnerName Wins!",
-                            color = VoltGreen,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Game ${matchState.currentGameIndex + 1} Complete",
-                            color = TextSecondary,
-                            fontSize = 9.sp,
-                            textAlign = TextAlign.Center
+                            text = "Start Game ${matchState.currentGameIndex + 2}",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
-            }
 
-            item {
-                Spacer(modifier = Modifier.height(6.dp))
-                Button(
-                    onClick = onNextGame,
-                    colors = ButtonDefaults.buttonColors(containerColor = VoltGreen, contentColor = PitchBlack),
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .height(34.dp)
-                ) {
-                    Text(
-                        text = "Start Game ${matchState.currentGameIndex + 2}",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                item {
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
+
+            ScrollIndicator(
+                state = listState,
+                colors = ScrollIndicatorDefaults.colors(
+                    indicatorColor = VoltGreen,
+                    trackColor = DarkBorder
+                ),
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
         }
     }
 }
@@ -973,80 +1034,99 @@ private fun MatchFinishedDialog(
     }
 
     ScreenScaffold(
-        scrollState = listState
+        scrollState = listState,
+        scrollIndicator = null
     ) { contentPadding ->
-        ScalingLazyColumn(
-            state = listState,
-            contentPadding = contentPadding,
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(PitchBlack)
-                .rotaryScrollable(
-                    behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
-                    focusRequester = focusRequester
-                )
-                .focusRequester(focusRequester)
-                .focusable()
         ) {
-            item {
-                Text(
-                    text = "🏆 MATCH OVER",
-                    color = VoltGold,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black,
-                    modifier = Modifier.padding(bottom = 4.dp)
-                )
-            }
+            ScalingLazyColumn(
+                state = listState,
+                contentPadding = contentPadding,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .rotaryScrollable(
+                        behavior = RotaryScrollableDefaults.behavior(scrollableState = listState),
+                        focusRequester = focusRequester
+                    )
+                    .focusRequester(focusRequester)
+                    .focusable()
+            ) {
+                item {
+                    Text(
+                        text = "🏆 MATCH OVER",
+                        color = VoltGold,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                }
 
-            item {
-                val winnerName = if (matchState.matchWinner == TeamSide.TEAM_A) matchState.config.teamA.name else matchState.config.teamB.name
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(0.88f)
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(DarkSurfaceElevated)
-                        .border(1.dp, VoltGold.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
-                        .padding(vertical = 8.dp, horizontal = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                item {
+                    val winnerName = if (matchState.matchWinner == TeamSide.TEAM_A) matchState.config.teamA.name else matchState.config.teamB.name
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(0.85f)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(DarkSurfaceElevated)
+                            .border(1.dp, VoltGold.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
+                            .padding(vertical = 8.dp, horizontal = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "$winnerName Wins Match!",
+                                color = VoltGold,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "${matchState.scoreTeamA} - ${matchState.scoreTeamB}",
+                                color = TextPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                fontFamily = FontFamily.Monospace,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Button(
+                        onClick = onRestart,
+                        colors = ButtonDefaults.buttonColors(containerColor = VoltGreen, contentColor = PitchBlack),
+                        modifier = Modifier
+                            .fillMaxWidth(0.75f)
+                            .height(34.dp)
+                    ) {
                         Text(
-                            text = "$winnerName Wins Match!",
-                            color = VoltGold,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "${matchState.scoreTeamA} - ${matchState.scoreTeamB}",
-                            color = TextPrimary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontFamily = FontFamily.Monospace,
-                            textAlign = TextAlign.Center
+                            text = "Play Again",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
-            }
 
-            item {
-                Spacer(modifier = Modifier.height(6.dp))
-                Button(
-                    onClick = onRestart,
-                    colors = ButtonDefaults.buttonColors(containerColor = VoltGreen, contentColor = PitchBlack),
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .height(34.dp)
-                ) {
-                    Text(
-                        text = "Play Again",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                item {
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
+
+            ScrollIndicator(
+                state = listState,
+                colors = ScrollIndicatorDefaults.colors(
+                    indicatorColor = VoltGold,
+                    trackColor = DarkBorder
+                ),
+                modifier = Modifier.align(Alignment.CenterEnd)
+            )
         }
     }
 }

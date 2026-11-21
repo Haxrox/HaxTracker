@@ -133,8 +133,8 @@ class WearWatchShapesComplianceTest {
         val buttonSection = source.substringAfter("fun ConfigOptionButton").substringBefore("@Composable")
 
         assertTrue(
-            "ConfigOptionButton must use responsive safe width ratio (0.88f) to prevent clipping on round bezels",
-            buttonSection.contains(".fillMaxWidth(0.88f)")
+            "ConfigOptionButton must use responsive safe width ratio (<= 0.88f) to prevent clipping on round bezels",
+            buttonSection.contains(".fillMaxWidth(0.85f)") || buttonSection.contains(".fillMaxWidth(0.88f)")
         )
 
         assertTrue(
@@ -149,8 +149,8 @@ class WearWatchShapesComplianceTest {
         val itemSection = source.substringAfter("fun GestureHelpItem").substringBefore("@Composable")
 
         assertTrue(
-            "GestureHelpItem must use responsive safe width ratio (0.88f)",
-            itemSection.contains(".fillMaxWidth(0.88f)")
+            "GestureHelpItem must use responsive safe width ratio (<= 0.88f)",
+            itemSection.contains(".fillMaxWidth(0.85f)") || itemSection.contains(".fillMaxWidth(0.88f)")
         )
 
         assertTrue(
@@ -166,29 +166,29 @@ class WearWatchShapesComplianceTest {
         // SettingsDialog Close button
         val settingsSection = source.substringAfter("fun SettingsDialog").substringBefore("fun ConfigOptionButton")
         assertTrue(
-            "SettingsDialog Close button must use safe width (0.85f)",
-            settingsSection.contains(".fillMaxWidth(0.85f)")
+            "SettingsDialog Close button must use safe width (<= 0.85f)",
+            settingsSection.contains(".fillMaxWidth(0.75f)") || settingsSection.contains(".fillMaxWidth(0.85f)")
         )
 
         // GestureHelp GOT IT button
         val gestureSection = source.substringAfter("fun GestureHelpDialog").substringBefore("fun GestureHelpItem")
         assertTrue(
-            "GestureHelpDialog GOT IT button must use safe width (0.85f)",
-            gestureSection.contains(".fillMaxWidth(0.85f)")
+            "GestureHelpDialog GOT IT button must use safe width (<= 0.85f)",
+            gestureSection.contains(".fillMaxWidth(0.75f)") || gestureSection.contains(".fillMaxWidth(0.85f)")
         )
 
         // GameFinished action button
         val gameSection = source.substringAfter("fun GameFinishedDialog").substringBefore("fun MatchFinishedDialog")
         assertTrue(
-            "GameFinishedDialog action button must use safe width (0.85f)",
-            gameSection.contains(".fillMaxWidth(0.85f)")
+            "GameFinishedDialog action button must use safe width (<= 0.85f)",
+            gameSection.contains(".fillMaxWidth(0.75f)") || gameSection.contains(".fillMaxWidth(0.85f)")
         )
 
         // MatchFinished action button
         val matchSection = source.substringAfter("fun MatchFinishedDialog").substringBefore("@WearPreviewDevices")
         assertTrue(
-            "MatchFinishedDialog action button must use safe width (0.85f)",
-            matchSection.contains(".fillMaxWidth(0.85f)")
+            "MatchFinishedDialog action button must use safe width (<= 0.85f)",
+            matchSection.contains(".fillMaxWidth(0.75f)") || matchSection.contains(".fillMaxWidth(0.85f)")
         )
     }
 
@@ -200,13 +200,13 @@ class WearWatchShapesComplianceTest {
 
         val scoreboardSection = source.substringAfter("fun CompactScoreBoard").substringBefore("fun TeamScoreBox")
         assertTrue(
-            "CompactScoreBoard must use safe width (0.92f) to avoid corner clipping on circular screens",
-            scoreboardSection.contains(".fillMaxWidth(0.92f)")
+            "CompactScoreBoard must use safe width (<= 0.92f) to avoid corner clipping on circular screens",
+            scoreboardSection.contains(".fillMaxWidth(0.88f)") || scoreboardSection.contains(".fillMaxWidth(0.92f)")
         )
 
         assertTrue(
-            "MiniCourtSection must use safe width (0.92f)",
-            source.contains(".fillMaxWidth(0.92f)")
+            "MiniCourtSection must use safe width (<= 0.92f)",
+            source.contains(".fillMaxWidth(0.88f)") || source.contains(".fillMaxWidth(0.92f)")
         )
     }
 
@@ -230,7 +230,7 @@ class WearWatchShapesComplianceTest {
 
         assertTrue(
             "WearApp must use 'when' statement inside AppScaffold to separate screens",
-            wearAppBody.contains("AppScaffold {") && wearAppBody.contains("when {")
+            wearAppBody.contains("AppScaffold") && wearAppBody.contains("when {")
         )
 
         assertTrue(
@@ -334,6 +334,66 @@ class WearWatchShapesComplianceTest {
         assertTrue(
             "styles.xml AppTheme must set android:colorBackground to black",
             stylesSource.contains("<item name=\"android:colorBackground\">@android:color/black</item>")
+        )
+    }
+
+    // ── Rule 9: Bottom Clearance Spacers (Prevent Screen Edge Cutoff) ──────
+
+    @Test
+    fun allDialogs_haveBottomClearanceSpacerToPreventBezelCutoff() {
+        val source = loadMainActivitySource()
+
+        val dialogNames = listOf(
+            "SettingsDialog",
+            "GestureHelpDialog",
+            "GameFinishedDialog",
+            "MatchFinishedDialog"
+        )
+
+        for (dialog in dialogNames) {
+            val dialogBody = source.substringAfter("fun $dialog").substringBefore("@Composable\nprivate fun")
+            assertTrue(
+                "$dialog must include a trailing bottom spacer (at least 32dp) so bottom controls are never cut off by circular watch bezels",
+                dialogBody.contains("Spacer(modifier = Modifier.height(36.dp))") ||
+                    dialogBody.contains("Spacer(modifier = Modifier.height(40.dp))") ||
+                    dialogBody.contains("Spacer(modifier = Modifier.height(48.dp))")
+            )
+        }
+    }
+
+    // ── Rule 10: Scrollbar Display Compliance (Wear Quality WO-V8) ────────
+
+    @Test
+    fun allScrollableDialogs_displayScrollIndicator() {
+        val source = loadMainActivitySource()
+
+        val dialogNames = listOf(
+            "SettingsDialog",
+            "GestureHelpDialog",
+            "GameFinishedDialog",
+            "MatchFinishedDialog"
+        )
+
+        for (dialog in dialogNames) {
+            val dialogBody = source.substringAfter("fun $dialog").substringBefore("@Composable\nprivate fun")
+            assertTrue(
+                "$dialog must display ScrollIndicator so the scrollbar is visible during interaction",
+                dialogBody.contains("ScrollIndicator(") &&
+                    dialogBody.contains("state = listState")
+            )
+        }
+    }
+
+    // ── Rule 11: AppScaffold Container Color Compliance ───────────────────
+
+    @Test
+    fun appScaffold_usesExplicitPitchBlackContainerColor() {
+        val source = loadMainActivitySource()
+        val wearAppBody = source.substringAfter("fun WearApp()").substringBefore("fun HeaderSection")
+
+        assertTrue(
+            "AppScaffold must explicitly set containerColor = PitchBlack for OLED bezel blending",
+            wearAppBody.contains("AppScaffold(") && wearAppBody.contains("containerColor = PitchBlack")
         )
     }
 }
