@@ -20,6 +20,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -107,7 +109,10 @@ fun MatchScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onNavigateBack) {
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier.semantics { contentDescription = "Back to home" }
+                ) {
                     Text("←", color = TextPrimary, fontSize = 24.sp)
                 }
 
@@ -132,7 +137,8 @@ fun MatchScreen(
                             viewModel.onAction(GameAction.Undo)
                             gestureFeedback = "⬅️ Point Undone"
                         },
-                        enabled = state.canUndo()
+                        enabled = state.canUndo(),
+                        modifier = Modifier.semantics { contentDescription = "Undo last point" }
                     ) {
                         Text("⟲", color = if (state.canUndo()) VoltCoral else TextDisabled, fontSize = 22.sp)
                     }
@@ -141,24 +147,39 @@ fun MatchScreen(
                             viewModel.onAction(GameAction.Redo)
                             gestureFeedback = "➡️ Point Redone"
                         },
-                        enabled = state.canRedo()
+                        enabled = state.canRedo(),
+                        modifier = Modifier.semantics { contentDescription = "Redo point" }
                     ) {
                         Text("⟳", color = if (state.canRedo()) VoltCyan else TextDisabled, fontSize = 22.sp)
                     }
-                    IconButton(onClick = { viewModel.onAction(GameAction.SwitchSidesManual) }) {
+                    IconButton(
+                        onClick = { viewModel.onAction(GameAction.SwitchSidesManual) },
+                        modifier = Modifier.semantics { contentDescription = "Switch court sides" }
+                    ) {
                         Text("⇄", color = VoltCyan, fontSize = 22.sp)
                     }
-                    IconButton(onClick = { showGestureHelp.value = true }) {
+                    IconButton(
+                        onClick = { showGestureHelp.value = true },
+                        modifier = Modifier.semantics { contentDescription = "Gesture controls help" }
+                    ) {
                         Text("🖐", fontSize = 20.sp)
                     }
-                    IconButton(onClick = { viewModel.toggleTts() }) {
+                    IconButton(
+                        onClick = { viewModel.toggleTts() },
+                        modifier = Modifier.semantics {
+                            contentDescription = if (isTtsEnabled) "Mute voice announcements" else "Enable voice announcements"
+                        }
+                    ) {
                         Text(
                             text = if (isTtsEnabled) "🔊" else "🔇",
                             color = if (isTtsEnabled) VoltGreen else TextDisabled,
                             fontSize = 20.sp
                         )
                     }
-                    IconButton(onClick = { showSpectatorDialog.value = true }) {
+                    IconButton(
+                        onClick = { showSpectatorDialog.value = true },
+                        modifier = Modifier.semantics { contentDescription = "Spectator scoreboard info" }
+                    ) {
                         Text("📡", fontSize = 20.sp)
                     }
                 }

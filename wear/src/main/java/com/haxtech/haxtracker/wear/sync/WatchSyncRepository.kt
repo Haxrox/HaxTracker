@@ -59,12 +59,12 @@ object WatchSyncRepository {
         val jsonStr = MatchStateSerializer.actionToJson(action)
         val bytes = jsonStr.toByteArray(Charsets.UTF_8)
 
-        // 1. DataClient
+        // 1. DataClient (standard priority without setUrgent() to preserve Wear OS battery)
         try {
             val putDataMapReq = PutDataMapRequest.create("/action")
             putDataMapReq.dataMap.putString("action_json", jsonStr)
             putDataMapReq.dataMap.putLong("timestamp", System.currentTimeMillis())
-            val req = putDataMapReq.asPutDataRequest().setUrgent()
+            val req = putDataMapReq.asPutDataRequest()
             Wearable.getDataClient(context).putDataItem(req)
         } catch (_: Exception) {
         }
@@ -99,12 +99,12 @@ object WatchSyncRepository {
         val jsonStr = MatchStateSerializer.toJson(state)
         val bytes = jsonStr.toByteArray(Charsets.UTF_8)
 
-        // 1. DataClient
+        // 1. DataClient (standard priority without setUrgent() to preserve Wear OS battery)
         try {
             val putDataMapReq = PutDataMapRequest.create("/match_state_watch")
             putDataMapReq.dataMap.putString("match_state_json", jsonStr)
             putDataMapReq.dataMap.putLong("timestamp", System.currentTimeMillis())
-            val req = putDataMapReq.asPutDataRequest().setUrgent()
+            val req = putDataMapReq.asPutDataRequest()
             Wearable.getDataClient(context).putDataItem(req)
         } catch (_: Exception) {
         }
