@@ -11,10 +11,24 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
+  wrapper-validation:
+    name: Gradle Wrapper Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v6
+
   build-and-test:
     name: Build & Unit Test
     if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' || !startsWith(github.event.head_commit.message, 'Merge pull request') }}
+    needs: ["wrapper-validation"]
     runs-on: ubuntu-latest
 
     steps:
@@ -107,16 +121,16 @@ jobs:
           script: |
             echo "Installing HaxTracker Mobile APK..."
             adb install mobile/build/outputs/apk/debug/*.apk || adb install mobile-debug.apk
-            
+
             echo "Launching HaxTracker Mobile Activity..."
             adb shell am start -n com.haxtech.haxtracker/.MainActivity
-            
+
             sleep 5
-            
+
             echo "Verifying application process is alive..."
             adb shell pidof com.haxtech.haxtracker >/dev/null || { echo "ERROR: Process died after launch!"; adb logcat -d '*:E'; exit 1; }
             echo "SUCCESS: HaxTracker Mobile is running on API level ${{ matrix.api-level }}"
-            
+
             echo "Taking screenshot..."
             adb shell screencap -p /sdcard/launch_screen_mobile_api_${{ matrix.api-level }}.png
             adb pull /sdcard/launch_screen_mobile_api_${{ matrix.api-level }}.png .
@@ -213,16 +227,16 @@ jobs:
           script: |
             echo "Installing HaxTracker Wear OS APK..."
             adb install wear/build/outputs/apk/debug/*.apk || adb install wear-debug.apk
-            
+
             echo "Launching HaxTracker Wear Activity..."
             adb shell am start -n com.haxtech.haxtracker/com.haxtech.haxtracker.wear.presentation.MainActivity
-            
+
             sleep 5
-            
+
             echo "Verifying Wear application process is alive..."
             adb shell pidof com.haxtech.haxtracker >/dev/null || { echo "ERROR: Wear OS Process died after launch!"; adb logcat -d '*:E'; exit 1; }
             echo "SUCCESS: HaxTracker Wear is running on Wear OS API level ${{ matrix.api-level }}"
-            
+
             echo "Taking Wear OS screenshot..."
             adb shell screencap -p /sdcard/launch_screen_wear_api_${{ matrix.api-level }}.png
             adb pull /sdcard/launch_screen_wear_api_${{ matrix.api-level }}.png .
